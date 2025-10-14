@@ -1,5 +1,6 @@
 name: 02 - Workflow Events v2
 # Wersja rozszerzona — push, pull_request, schedule, workflow_dispatch
+# Zmiana w celu uwaktywnienia pull_request
 
 on:
   push:
