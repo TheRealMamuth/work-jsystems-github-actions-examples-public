@@ -1,4 +1,4 @@
-name: "04 - Using Actions:Docker Nginx build & curl test"
+name: "04 v3 - Using Actions:Docker Nginx build & curl test "
 
 on:
   workflow_dispatch:
