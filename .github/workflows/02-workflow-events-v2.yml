@@ -2,7 +2,7 @@ name: 02 - Workflow Events v2
 # Wersja rozszerzona — push, pull_request, schedule, workflow_dispatch
 
 on:
-  push:
+  #push:
   pull_request:
   schedule:
     - cron: "0 9 * * *"     # codziennie o 09:00 UTC
