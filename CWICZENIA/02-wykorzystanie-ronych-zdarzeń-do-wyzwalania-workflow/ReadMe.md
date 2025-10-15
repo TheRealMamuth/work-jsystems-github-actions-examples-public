@@ -1,43 +1,82 @@
-# Ćwiczenie praktyczne 02 — Wykorzystanie różnych zdarzeń do wyzwalania workflowów
+# GitHub Actions Workflow Triggers
 
-## Opis ćwiczenia
-Celem tego ćwiczenia jest poznanie różnych sposobów wyzwalania (uruchamiania) workflowów w GitHub Actions.
+GitHub Actions workflows are triggered by specific events that occur within your repository. These triggers define when a workflow should run, automating various tasks like continuous integration, testing, and deployment.
 
-## Instrukcje:
-1. Utwórz plik 02-workflow-events.yaml w folderze .github/workflows w katalogu głównym Twojego repozytorium.
-2. Nazwij workflow: 02 - Workflow Events.
-3. Dodaj następujący wyzwalacz (trigger) do workflowu:
-   - push
-4. Dodaj pojedynczą pracę (job) do workflowu:
-   - Job o nazwie echo ma działać na ubuntu-latest i zawierać jeden krok (step) o nazwie Show the trigger, który wypisze typ zdarzenia, które wyzwoliło workflow.
-5. Zacommituj zmiany i wypchnij je (push). Poświęć chwilę, aby obejrzeć wynik uruchomienia workflowu.
-6. Następnie dodaj więcej wyzwalaczy:
-   - pull_request
-   - schedule (wyrażenie cron)
-   - workflow_dispatch
-7. Ponownie zacommituj i wypchnij zmiany. Poobserwuj różne sposoby, w jakie workflow się uruchamia.
-   - Możesz utworzyć Pull Request na GitHubie, aby zobaczyć, jak zmienia się wynik uruchomienia workflowu.
-   - Spróbuj też uruchomić workflow z interfejsu:
-   - Wejdź w zakładkę Actions na stronie głównej repozytorium.
-   - Wybierz po lewej workflow 02 - Workflow Events.
-   - Kliknij przycisk Run workflow po prawej, obok komunikatu „This workflow has a workflow_dispatch event trigger.”
-8. Po zapoznaniu się z różnymi sposobami wyzwalania workflowu, zredukuj listę wyzwalaczy tak, aby pozostał tylko workflow_dispatch (żeby workflow nie uruchamiał się przy każdym pushu i nie zaśmiecał listy uruchomień).
+Here are some common triggers for GitHub Actions workflows:
 
-## Wskazówki
-- Poprawna składnia crona
+## 1. Push Events
 
-Obecnie GitHub Actions nie wspiera definicji `crona` zawierających sześć pól (np. `0 0 * * * *`), tylko definicje pięciopolowe.
-Aby zdefiniować trigger cron, użyj składni:
+Trigger a workflow when code is pushed to a specific branch.
+
+Example YAML:
+```yaml
+on:
+  push:
+    branches:
+      - main
+      - release/*
+```
+
+## 2. Pull Request Events
+
+Trigger a workflow when pull requests are opened, updated, or synchronized.
+
+Example YAML:
+
+```yaml
+on:
+  pull_request:
+    branches:
+      - main
+```
+
+## 3. Scheduled Events
+
+Schedule workflows to run at specific times or intervals using cron expressions.
+
+Example YAML:
+
 ```yaml
 on:
   schedule:
-    - cron: '<wyrażenie_cron>'
+    - cron: '0 0 * * *' # Run every day at midnight UTC
 ```
 
-- Dostęp do nazwy zdarzenia, które wyzwoliło workflow. Nazwę zdarzenia można uzyskać przez `${{ github.event_name }}`. Przykład:
+## 4. Issue Comment Events
+
+Trigger workflows when comments are made on issues or pull requests.
+
+Example YAML:
+
 ```yaml
-steps:
-  - name: Event name
-    run: |
-      echo "Event name: ${{ github.event_name }}"
+on:
+  issue_comment:
+    types:
+      - created
 ```
+
+## 5. Webhook Events
+
+Trigger workflows in response to custom webhook payloads sent to your repository.
+
+Example YAML:
+
+```yaml
+on:
+  repository_dispatch:
+    types:
+      - my-custom-event
+```
+
+## 6. Manual Triggers
+   
+Allow manual triggering of workflows through the GitHub Actions UI or API.
+
+Example YAML:
+
+```yaml
+on:
+  workflow_dispatch:
+```
+
+These examples demonstrate various ways to trigger GitHub Actions workflows based on specific events and conditions. You can customize them to suit your project's needs and automate your development processes effectively.
