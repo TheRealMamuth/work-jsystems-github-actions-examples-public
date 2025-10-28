@@ -19,11 +19,8 @@ Here are the instructions for the exercise:
    - a. `push`
 
 4. **Add three jobs to the workflow:**
-
    - a. The first job, `ubuntu-echo`, should run on `ubuntu-latest` and have a single step named **Show OS**, which runs a multi-line bash script printing `"This job is running on an Ubuntu runner."` and then the runner OS on the next line.
-
    - b. The second job, `windows-echo`, should run on `windows-latest` and have a single step named **Show OS**, which runs a multi-line bash script printing `"This job is running on a Windows runner."` and then the runner OS on the next line.
-
    - c. The third job, `mac-echo`, should run on `macos-latest` and have a single step named **Show OS**, which runs a multi-line bash script printing `"This job is running on a MacOS runner."` and then the runner OS on the next line.
 
 5. **Change the workflow trigger** to contain only `workflow_dispatch` to prevent this workflow from running with every push and cluttering the workflow list.
@@ -70,11 +67,8 @@ Instrukcje do ćwiczenia:
    - a. `push`
 
 4. **Dodaj trzy zadania (jobs):**
-
    - a. Pierwsze zadanie, `ubuntu-echo`, powinno działać na `ubuntu-latest` i zawierać jeden krok **Show OS**, który uruchamia wieloliniowy skrypt bash wypisujący `"This job is running on an Ubuntu runner."`, a następnie nazwę systemu operacyjnego runnera.
-
    - b. Drugie zadanie, `windows-echo`, powinno działać na `windows-latest` i zawierać jeden krok **Show OS**, który wypisuje `"This job is running on a Windows runner."`, a następnie nazwę systemu operacyjnego runnera.
-
    - c. Trzecie zadanie, `mac-echo`, powinno działać na `macos-latest` i zawierać jeden krok **Show OS**, który wypisuje `"This job is running on a MacOS runner."`, a następnie nazwę systemu operacyjnego runnera.
 
 5. **Zmień wyzwalacz workflow**, aby zawierał tylko `workflow_dispatch`, co zapobiegnie uruchamianiu go przy każdym pushu i zanieczyszczaniu listy uruchomień.
