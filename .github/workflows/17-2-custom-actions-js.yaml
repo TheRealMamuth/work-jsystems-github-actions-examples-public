@@ -15,7 +15,7 @@ on:
         default: update-dependencies
       working-dir:
         type: string
-        default: 17-custom-actions/react-app
+        default: CWICZENIA/17-custom-actions/react-app
       debug:
         type: boolean
         default: false
