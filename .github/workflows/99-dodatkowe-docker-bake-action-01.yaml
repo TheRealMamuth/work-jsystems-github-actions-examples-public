@@ -62,7 +62,7 @@ jobs:
           # Ładujemy nasz hcl oraz *dwa* pliki „bake” zwrócone przez metadata-action:
           source: .
           files: |
-            DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+            cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
             ${{ steps.meta.outputs.bake-file-tags }}
             ${{ steps.meta.outputs.bake-file-annotations }}
           # push: true  # włącz gdy chcesz publikować do rejestru
