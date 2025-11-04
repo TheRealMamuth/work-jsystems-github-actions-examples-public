@@ -11,7 +11,7 @@ target "web" {
   platforms = ["linux/amd64", "linux/arm64"]
 
   # Domyślne tagi (nadpisze je metadata-action przez bake-file-tags)
-  tags = ["example/demo-nginx:local"]
+  tags = ["piotrskoska/github-action-test:local"]
 
   # Cache do GitHub Actions (szybkie buildy)
   cache-from = ["type=gha"]
