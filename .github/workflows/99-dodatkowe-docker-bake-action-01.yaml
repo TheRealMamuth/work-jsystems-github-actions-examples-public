@@ -60,7 +60,6 @@ jobs:
         uses: docker/bake-action@v6
         with:
           # Ładujemy nasz hcl oraz *dwa* pliki „bake” zwrócone przez metadata-action:
-          source: .
           files: |
             cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
             ${{ steps.meta.outputs.bake-file-tags }}
