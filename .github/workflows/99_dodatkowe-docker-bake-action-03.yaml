@@ -1,4 +1,4 @@
-name: "Build & Verify (Bake) — tag = sha-<commit>"
+name: "99 - Dodatkowe: Docker Bake Action 02 Push and Test"
 
 on:
   workflow_dispatch:
@@ -35,7 +35,6 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Budujemy i pushujemy WYŁĄCZNIE tag sha-<commit>
       - name: Build & Push (Bake) with sha tag
         uses: docker/bake-action@v6
         with:
@@ -45,16 +44,9 @@ jobs:
             web.context=cwd://DODATKOWE/docker-bake-actions-01
             web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
             web.tags=${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag_sha }}
-            # (opcjonalnie) etykiety OCI z rewizją
             web.labels=org.opencontainers.image.revision=${{ github.sha }}
-        env:
-          # bake-action użyje buildx; push robimy flagą niżej
-          # brak dodatkowych env potrzebnych
-          DOCKER_BUILDKIT: "1"
           push: true
-          # print: true   # odkomentuj do debugowania planu Bake
 
-      # Testujemy TEN SAM tag
       - name: Pull image (sha tag)
         run: docker pull "${{ steps.vars.outputs.image_ref }}"
 
@@ -70,7 +62,6 @@ jobs:
             -e APP_NAME -e APP_ENV \
             "${{ steps.vars.outputs.image_ref }}"
 
-          # Czekamy aż /healthz zwróci 'ok'
           for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
               echo "service healthy"
@@ -87,7 +78,6 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsS http://localhost:8080/ | tee /tmp/page.html
-          # dopasuj do swojego index.template.html
           grep -q 'Witaj z Nginx' /tmp/page.html
           grep -q '<strong>demo-nginx</strong>' /tmp/page.html
           grep -q '<strong>test-ci</strong>' /tmp/page.html
