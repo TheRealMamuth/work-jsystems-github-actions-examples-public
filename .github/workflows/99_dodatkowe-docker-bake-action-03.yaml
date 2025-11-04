@@ -21,14 +21,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # (opcjonalny podgląd struktury repo, zostaw jeśli pomaga w debugowaniu)
       - name: Debug paths
         run: |
           echo "WORKSPACE: $GITHUB_WORKSPACE"
           ls -la
-          ls -la DODATKOWE
-          ls -la DODATKOWE/docker-bake-actions-01
-          echo ${{ github.workspace}}
-          cat ${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+          ls -la DODATKOWE || true
+          ls -la DODATKOWE/docker-bake-actions-01 || true
+          if [ -f "${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl" ]; then
+            cat ${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -45,8 +47,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            # zachowujemy stały semver + dodatkowy tag po SHA commita
+            # stały semver (jeśli chcesz utrzymywać go ręcznie)
             type=semver,pattern={{version}},value=0.1.0
+            # zawsze dostępny tag po SHA commita
             type=sha,format=long
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
@@ -62,19 +65,41 @@ jobs:
             web.context=cwd://DODATKOWE/docker-bake-actions-01
             web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
           push: true
-          # print: true
+          # print: true   # odkomentuj tymczasowo, aby podejrzeć finalny plan Bake
 
-      # --- NOWE: weryfikacja (pull -> run -> health -> content) ---
+      # --- WYBÓR TAGA, KTÓRY NA PEWNO ISTNIEJE ---
 
-      # Wyprowadzamy ref do obrazu, aby używać 1 spójnego taga w kolejnych krokach
-      # (tu bierzemy semver z metadata-action, np. 0.1.0)
-      - name: Compute image ref
-        id: vars
+      - name: Print metadata tags (debug)
         run: |
-          echo "image_ref=${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "Tags from metadata-action:"
+          printf '%s\n' "${{ steps.meta.outputs.tags }}"
+
+      - name: Choose a pushed tag (prefer sha-*)
+        id: choose_tag
+        run: |
+          set -euo pipefail
+          # metadata-action zwraca pełne refy obrazu w wielu liniach (repo:tag)
+          # Preferujemy tag 'sha-*', bo jest gwarantowany przy każdym commicie.
+          sha_line="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | awk -F':' '/:sha-/ {print; exit}')"
+          if [ -n "$sha_line" ]; then
+            image_ref="$sha_line"
+          else
+            # fallback: bierzemy pierwszą linię (np. semver 0.1.0), jeśli istnieje
+            image_ref="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | head -n1)"
+          fi
+          # Wyciągamy sam tag po dwukropku, ale zachowujemy też pełny ref do pulla
+          tag="$(printf '%s' "$image_ref" | awk -F':' '{print $2}')"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "image_ref=${{ env.IMAGE_NAME }}:$tag" >> $GITHUB_OUTPUT
+          echo "Chosen image ref: ${{ env.IMAGE_NAME }}:$tag"
+
+      - name: Inspect manifest (sanity check)
+        run: docker buildx imagetools inspect "${{ steps.choose_tag.outputs.image_ref }}"
 
       - name: Pull just-pushed image
-        run: docker pull "${{ steps.vars.outputs.image_ref }}"
+        run: docker pull "${{ steps.choose_tag.outputs.image_ref }}"
+
+      # --- TEST INTEGRACYJNY: RUN -> HEALTH -> STRONA ---
 
       - name: Run container (smoke test)
         id: run_container
@@ -86,30 +111,30 @@ jobs:
           docker rm -f websut 2>/dev/null || true
           docker run -d --rm --name websut -p 8080:80 \
             -e APP_NAME -e APP_ENV \
-            "${{ steps.vars.outputs.image_ref }}"
-          # Czekamy aż /healthz zwróci 'ok'
-          for i in {1..30}; do
+            "${{ steps.choose_tag.outputs.image_ref }}"
+
+          # Czekamy aż endpoint zdrowia zacznie zwracać 'ok'
+          for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
               echo "service healthy"
               exit 0
             fi
             sleep 1
           done
+
           echo "Service did not become healthy in time" >&2
           docker logs websut || true
           exit 1
-      # /healthz jest skonfigurowane w Nginx i zwraca 'ok'.  [oai_citation:3‡ReadMe.md](sediment://file_00000000cb5c720ea5a44becdef6625d)
 
       - name: Verify homepage content (envsubst)
         run: |
           set -euo pipefail
           curl -fsS http://localhost:8080/ | tee /tmp/page.html
-          # Nagłówek z templatu
-          grep -q 'Witaj z Nginx!' /tmp/page.html
-          # {{APP_NAME}} i {{APP_ENV}} powinny zostać podmienione
+          # Spodziewane stałe fragmenty strony (dopasuj do własnego index.template.html)
+          grep -q 'Witaj z Nginx' /tmp/page.html
+          # Zmienne środowiskowe podmienione przez envsubst
           grep -q '<strong>demo-nginx</strong>' /tmp/page.html
           grep -q '<strong>test-ci</strong>' /tmp/page.html
-      # Powyższe wartości pochodzą z index.template.html i są podmieniane w ENTRYPOINcie.  [oai_citation:4‡index.template.html](sediment://file_00000000009071f5b6c5487326ebb8cb)
 
       - name: Show logs on failure
         if: failure()
