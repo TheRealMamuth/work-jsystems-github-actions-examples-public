@@ -63,17 +63,50 @@ jobs:
             web.args.IMAGE_VERSION=${{ steps.meta.outputs.version }}
           push: true
 
-      # ====== DODANE: test po publikacji ======
+      # ====== ZAMIANA: wybieramy tag, który ISTNIEJE w rejestrze ======
 
-      - name: Choose version tag
+      - name: Show generated tags (debug)
+        run: printf '%s\n' "${{ steps.meta.outputs.tags }}"
+
+      - name: Resolve existing image ref
         id: choose
         run: |
-          set -e
-          ver="$(echo "${{ steps.meta.outputs.tags }}" | awk -F: '/:[0-9]+\.[0-9]+\.[0-9]+$/ {print $2; exit}')"
-          echo "version=${ver}" >> $GITHUB_OUTPUT
-          echo "image_ref=${{ env.IMAGE_NAME }}:${ver}" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          # Zbierz pełne refy (repo:tag) z metadata-action:
+          mapfile -t REFS < <(printf '%s\n' "${{ steps.meta.outputs.tags }}")
 
-      - name: Pull image (version tag)
+          # preferencje: sha-* -> semver -> latest
+          choose_ref() {
+            patt="$1"
+            for ref in "${REFS[@]}"; do
+              tag="${ref##*:}"
+              case "$patt" in
+                sha)     [[ "$tag" == sha-*      ]] || continue ;;
+                semver)  [[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue ;;
+                latest)  [[ "$tag" == latest     ]] || continue ;;
+              esac
+              if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
+                echo "$ref"; return 0
+              fi
+            done
+            return 1
+          }
+
+          chosen="$(choose_ref sha || true)"
+          [[ -z "$chosen" ]] && chosen="$(choose_ref semver || true)"
+          [[ -z "$chosen" ]] && chosen="$(choose_ref latest || true)"
+
+          if [[ -z "$chosen" ]]; then
+            printf 'Żaden z tagów nie jest dostępny w rejestrze.\nKandydaci:\n%s\n' "${REFS[@]}" >&2
+            exit 1
+          fi
+
+          echo "image_ref=$chosen" >> $GITHUB_OUTPUT
+          # wersję bierzemy z metadata-action (użyjemy do asercji w HTML)
+          echo "version=${{ steps.meta.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "Chosen: $chosen"
+
+      - name: Pull chosen image
         run: docker pull "${{ steps.choose.outputs.image_ref }}"
 
       - name: Run container (smoke + health)
@@ -89,7 +122,7 @@ jobs:
             -e APP_NAME -e APP_ENV -e IMAGE_VERSION \
             "${{ steps.choose.outputs.image_ref }}"
 
-          for i in {1..30}; do
+          for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
               exit 0
             fi
