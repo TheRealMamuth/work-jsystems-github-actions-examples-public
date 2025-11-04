@@ -35,33 +35,43 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Build & push obrazu z Twoim Dockerfile (ENTRYPOINT robi envsubst)
       - name: Build & Push (Bake) with sha tag
         uses: docker/bake-action@v6
         with:
           files: |
-            cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+            # jeśli docker-bake.hcl masz w innym miejscu – podmień ścieżkę
+            cwd://docker-bake.hcl
           set: |
-            web.context=cwd://DODATKOWE/docker-bake-actions-01
-            web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
+            # kontekst i Dockerfile zgodnie z Twoim układem repo
+            web.context=cwd://
+            web.dockerfile=cwd://Dockerfile
+            # tagujemy TYLKO sha-<commit>
             web.tags=${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag_sha }}
+            # przykładowy label z rewizją (poprawna składnia bake)
             web.labels.org.opencontainers.image.revision=${{ github.sha }}
           push: true
 
       - name: Pull image (sha tag)
         run: docker pull "${{ steps.vars.outputs.image_ref }}"
 
+      # ENTRYPOINT w obrazie:
+      #   envsubst < /usr/share/nginx/html/index.template.html > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'
+      # Podajemy więc zmienne, które mają być podstawione.
       - name: Run container (smoke + health)
         id: run_container
         env:
           APP_NAME: "demo-nginx"
           APP_ENV: "test-ci"
+          IMAGE_VERSION: "0.1.0"
         run: |
           set -euo pipefail
           docker rm -f websut 2>/dev/null || true
           docker run -d --rm --name websut -p 8080:80 \
-            -e APP_NAME -e APP_ENV \
+            -e APP_NAME -e APP_ENV -e IMAGE_VERSION \
             "${{ steps.vars.outputs.image_ref }}"
 
+          # czekamy aż /healthz zacznie zwracać 'ok'
           for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
               echo "service healthy"
@@ -74,13 +84,25 @@ jobs:
           docker logs websut || true
           exit 1
 
-      - name: Verify homepage content
+      - name: Verify homepage content (envsubst result)
+        env:
+          APP_NAME: "demo-nginx"
+          APP_ENV: "test-ci"
+          IMAGE_VERSION: "0.1.0"
         run: |
           set -euo pipefail
           curl -fsS http://localhost:8080/ | tee /tmp/page.html
+
+          # Nagłówek strony
           grep -q 'Witaj z Nginx' /tmp/page.html
-          grep -q '<strong>demo-nginx</strong>' /tmp/page.html
-          grep -q '<strong>test-ci</strong>' /tmp/page.html
+
+          # Sprawdzamy, że PODMIANA działa (muszą być realne wartości, nie placeholdery)
+          grep -q "<strong>${APP_NAME}</strong>" /tmp/page.html
+          grep -q "<strong>${APP_ENV}</strong>" /tmp/page.html
+
+          # (opcjonalnie) wersja – jeśli template korzysta z ${IMAGE_VERSION}
+          # Usuń ten grep, jeśli w templacie nie ma wstawki na wersję.
+          grep -q "<strong>${IMAGE_VERSION}</strong>" /tmp/page.html || echo "Version not asserted (ok if not templated)"
 
       - name: Show logs on failure
         if: failure()
