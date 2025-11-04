@@ -44,7 +44,7 @@ jobs:
             web.context=cwd://DODATKOWE/docker-bake-actions-01
             web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
             web.tags=${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag_sha }}
-            web.labels=org.opencontainers.image.revision=${{ github.sha }}
+            web.labels.org.opencontainers.image.revision=${{ github.sha }}
           push: true
 
       - name: Pull image (sha tag)
