@@ -1,8 +1,9 @@
-name: ci
+name: "99 - Dodatkowe: Docker Bake Action 01"
 on:
-  push:
-    branches: [ main ]
-  pull_request:
+  workflow_dispatch:
+  #push:
+  #  branches: [ main ]
+  #pull_request:
 
 env:
   IMAGE_NAME: your-dockerhub-namespace/demo-nginx
