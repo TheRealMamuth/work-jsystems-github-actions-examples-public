@@ -51,8 +51,6 @@ jobs:
           # bake-action użyje buildx; push robimy flagą niżej
           # brak dodatkowych env potrzebnych
           DOCKER_BUILDKIT: "1"
-        # ważne: push musi być w 'with' a nie w env
-        with:
           push: true
           # print: true   # odkomentuj do debugowania planu Bake
 
