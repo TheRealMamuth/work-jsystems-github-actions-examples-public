@@ -64,5 +64,8 @@ jobs:
             cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
             cwd://${{ steps.meta.outputs.bake-file-tags }}
             cwd://${{ steps.meta.outputs.bake-file-annotations }}
+          set: |
+            web.context=cwd://DODATKOWE/docker-bake-actions-01
+            web.dockerfile=./Dockerfile
           # push: true  # włącz gdy chcesz publikować do rejestru
           # print: true # pomocne do debugowania (wypisze finalną definicję Bake)
