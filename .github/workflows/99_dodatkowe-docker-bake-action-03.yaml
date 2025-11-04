@@ -1,10 +1,9 @@
-name: "99 - Dodatkowe: Docker Bake Action 02 Push + Verify"
+name: "Build & Verify (Bake) — tag = sha-<commit>"
 
 on:
   workflow_dispatch:
   #push:
   #  branches: [ main ]
-  #pull_request:
 
 env:
   IMAGE_NAME: piotrskoska/github-action-test
@@ -14,12 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Compute tags
+        id: vars
+        run: |
+          echo "tag_sha=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_ref=${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -30,95 +35,32 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Docker metadata (tags, labels, annotations)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          tags: |
-            # stały semver (jeśli chcesz go utrzymywać ręcznie)
-            type=semver,pattern={{version}},value=0.1.0
-            # zawsze dostępny tag po SHA commita
-            type=sha,format=long
-            # opcjonalnie latest
-            type=raw,value=latest
-        env:
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
-
-      - name: Build (Bake) + push (merge metadata via bake-file)
+      # Budujemy i pushujemy WYŁĄCZNIE tag sha-<commit>
+      - name: Build & Push (Bake) with sha tag
         uses: docker/bake-action@v6
         with:
           files: |
             cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
-            ${{ steps.meta.outputs.bake-file }}  # <-- JEDEN scalony plik z metadata-action
           set: |
             web.context=cwd://DODATKOWE/docker-bake-actions-01
             web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
+            web.tags=${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag_sha }}
+            # (opcjonalnie) etykiety OCI z rewizją
+            web.labels=org.opencontainers.image.revision=${{ github.sha }}
+        env:
+          # bake-action użyje buildx; push robimy flagą niżej
+          # brak dodatkowych env potrzebnych
+          DOCKER_BUILDKIT: "1"
+        # ważne: push musi być w 'with' a nie w env
+        with:
           push: true
-          # print: true   # odkomentuj, żeby zobaczyć finalny plan (czy tagi są podpięte)
+          # print: true   # odkomentuj do debugowania planu Bake
 
-      # --- WYBÓR ISTNIEJĄCEGO TAGA Z REJESTRU ---
+      # Testujemy TEN SAM tag
+      - name: Pull image (sha tag)
+        run: docker pull "${{ steps.vars.outputs.image_ref }}"
 
-      - name: Show metadata tags (debug)
-        run: |
-          echo "Metadata tags:"
-          printf '%s\n' "${{ steps.meta.outputs.tags }}"
-
-      - name: Resolve image tag that exists in registry
-        id: choose_tag
-        run: |
-          set -euo pipefail
-          # Kolejność preferencji: sha-* -> semver -> latest
-          preferred_order="sha- ^[0-9]+\.[0-9]+\.[0-9]+$ latest"
-
-          # Zbierz listę refów (repo:tag) z metadata-action
-          mapfile -t REFS < <(printf '%s\n' "${{ steps.meta.outputs.tags }}")
-
-          chosen_ref=""
-          # Najpierw spróbuj zgodnie z preferencjami
-          for pat in $preferred_order; do
-            for ref in "${REFS[@]}"; do
-              tag="${ref##*:}"
-              if [[ "$pat" == "sha-" && "$tag" == sha-* ]]; then
-                if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
-                  chosen_ref="$ref"; break 2
-                fi
-              elif [[ "$pat" == "latest" && "$tag" == "latest" ]]; then
-                if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
-                  chosen_ref="$ref"; break 2
-                fi
-              elif [[ "$pat" =~ ^\^ && "$tag" =~ $pat ]]; then
-                if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
-                  chosen_ref="$ref"; break 2
-                fi
-              fi
-            done
-          done
-
-          # Jeśli jeszcze nic nie znaleziono, spróbuj po kolei wszystkie
-          if [[ -z "$chosen_ref" ]]; then
-            for ref in "${REFS[@]}"; do
-              if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
-                chosen_ref="$ref"; break
-              fi
-            done
-          fi
-
-          if [[ -z "$chosen_ref" ]]; then
-            echo "Żaden z tagów nie istnieje w rejestrze. Sprawdź krok Bake/Push i print planu." >&2
-            printf 'Kandydaci:\n%s\n' "${REFS[@]}" >&2
-            exit 1
-          fi
-
-          echo "image_ref=$chosen_ref" >> $GITHUB_OUTPUT
-          echo "Wybrany obraz: $chosen_ref"
-
-      - name: Pull just-pushed image
-        run: docker pull "${{ steps.choose_tag.outputs.image_ref }}"
-
-      # --- TEST INTEGRACYJNY: RUN -> HEALTH -> STRONA ---
-
-      - name: Run container (smoke test)
+      - name: Run container (smoke + health)
         id: run_container
         env:
           APP_NAME: "demo-nginx"
@@ -128,9 +70,9 @@ jobs:
           docker rm -f websut 2>/dev/null || true
           docker run -d --rm --name websut -p 8080:80 \
             -e APP_NAME -e APP_ENV \
-            "${{ steps.choose_tag.outputs.image_ref }}"
+            "${{ steps.vars.outputs.image_ref }}"
 
-          # Czekamy aż /healthz zacznie zwracać 'ok'
+          # Czekamy aż /healthz zwróci 'ok'
           for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
               echo "service healthy"
@@ -143,11 +85,11 @@ jobs:
           docker logs websut || true
           exit 1
 
-      - name: Verify homepage content (envsubst)
+      - name: Verify homepage content
         run: |
           set -euo pipefail
           curl -fsS http://localhost:8080/ | tee /tmp/page.html
-          # Dopasuj te grepy do Twojego index.template.html:
+          # dopasuj do swojego index.template.html
           grep -q 'Witaj z Nginx' /tmp/page.html
           grep -q '<strong>demo-nginx</strong>' /tmp/page.html
           grep -q '<strong>test-ci</strong>' /tmp/page.html
