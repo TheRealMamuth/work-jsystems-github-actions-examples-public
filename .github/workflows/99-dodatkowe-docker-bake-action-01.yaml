@@ -6,7 +6,7 @@ on:
   #pull_request:
 
 env:
-  IMAGE_NAME: your-dockerhub-namespace/demo-nginx
+  IMAGE_NAME: piotrskoska/github-action-test
 
 jobs:
   docker:
