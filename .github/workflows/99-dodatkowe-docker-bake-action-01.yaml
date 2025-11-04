@@ -29,6 +29,7 @@ jobs:
           ls -la DODATKOWE
           ls -la DODATKOWE/docker-bake-actions-01
           echo ${{ github.workspace}}
+          test -f DODATKOWE/docker-bake-actions-01/docker-bake.hcl && echo "HCL OK" || (echo "HCL NOT FOUND" && exit 1)
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
