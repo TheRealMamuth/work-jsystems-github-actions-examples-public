@@ -3,8 +3,8 @@ group "default" {
 }
 
 target "web" {
-  context    = "DODATKOWE/docker-bake-actions-01"
-  dockerfile = "DODATKOWE/docker-bake-actions-01/Dockerfile"
+  context    = "."
+  dockerfile = "Dockerfile"
 
   # Multi-arch (opcjonalnie) – możesz zostawić jedną platformę dla szybkości
   platforms = ["linux/amd64", "linux/arm64"]
