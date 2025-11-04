@@ -1,0 +1,122 @@
+name: "99 - Dodatkowe: Docker Bake Action 02 Push + Verify"
+
+on:
+  workflow_dispatch:
+  #push:
+  #  branches: [ main ]
+  #pull_request:
+
+env:
+  IMAGE_NAME: piotrskoska/github-action-test
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug paths
+        run: |
+          echo "WORKSPACE: $GITHUB_WORKSPACE"
+          ls -la
+          ls -la DODATKOWE
+          ls -la DODATKOWE/docker-bake-actions-01
+          echo ${{ github.workspace}}
+          cat ${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract Docker metadata (tags & annotations)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            # zachowujemy stały semver + dodatkowy tag po SHA commita
+            type=semver,pattern={{version}},value=0.1.0
+            type=sha,format=long
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+      - name: Build (Bake) with annotations (push)
+        uses: docker/bake-action@v6
+        with:
+          files: |
+            cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+            cwd://${{ steps.meta.outputs.bake-file-tags }}
+            cwd://${{ steps.meta.outputs.bake-file-annotations }}
+          set: |
+            web.context=cwd://DODATKOWE/docker-bake-actions-01
+            web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
+          push: true
+          # print: true
+
+      # --- NOWE: weryfikacja (pull -> run -> health -> content) ---
+
+      # Wyprowadzamy ref do obrazu, aby używać 1 spójnego taga w kolejnych krokach
+      # (tu bierzemy semver z metadata-action, np. 0.1.0)
+      - name: Compute image ref
+        id: vars
+        run: |
+          echo "image_ref=${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Pull just-pushed image
+        run: docker pull "${{ steps.vars.outputs.image_ref }}"
+
+      - name: Run container (smoke test)
+        id: run_container
+        env:
+          APP_NAME: "demo-nginx"
+          APP_ENV: "test-ci"
+        run: |
+          set -euo pipefail
+          docker rm -f websut 2>/dev/null || true
+          docker run -d --rm --name websut -p 8080:80 \
+            -e APP_NAME -e APP_ENV \
+            "${{ steps.vars.outputs.image_ref }}"
+          # Czekamy aż /healthz zwróci 'ok'
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
+              echo "service healthy"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Service did not become healthy in time" >&2
+          docker logs websut || true
+          exit 1
+      # /healthz jest skonfigurowane w Nginx i zwraca 'ok'.  [oai_citation:3‡ReadMe.md](sediment://file_00000000cb5c720ea5a44becdef6625d)
+
+      - name: Verify homepage content (envsubst)
+        run: |
+          set -euo pipefail
+          curl -fsS http://localhost:8080/ | tee /tmp/page.html
+          # Nagłówek z templatu
+          grep -q 'Witaj z Nginx!' /tmp/page.html
+          # {{APP_NAME}} i {{APP_ENV}} powinny zostać podmienione
+          grep -q '<strong>demo-nginx</strong>' /tmp/page.html
+          grep -q '<strong>test-ci</strong>' /tmp/page.html
+      # Powyższe wartości pochodzą z index.template.html i są podmieniane w ENTRYPOINcie.  [oai_citation:4‡index.template.html](sediment://file_00000000009071f5b6c5487326ebb8cb)
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker ps -a || true
+          docker logs websut || true
+
+      - name: Cleanup
+        if: always()
+        run: docker stop websut || true
