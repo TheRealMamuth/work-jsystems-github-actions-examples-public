@@ -50,7 +50,7 @@ jobs:
       - name: Build (Bake) with annotations
         uses: docker/bake-action@v6
         with:
-          workdir: ./DODATKOWE/docker-bake-action-01
+          workdir: DODATKOWE/docker-bake-action-01
           # Ładujemy nasz hcl oraz *dwa* pliki „bake” zwrócone przez metadata-action:
           files: |
             ./docker-bake.hcl
