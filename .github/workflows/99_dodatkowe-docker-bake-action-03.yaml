@@ -1,9 +1,9 @@
 name: "99 - Dodatkowe: Docker Bake Action 02 Push and Test"
-
 on:
   workflow_dispatch:
   #push:
   #  branches: [ main ]
+  #pull_request:
 
 env:
   IMAGE_NAME: piotrskoska/github-action-test
@@ -13,96 +13,133 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
       id-token: write
+      packages: write
 
     steps:
+      # (Od v6 bake-action może korzystać z Git context bez checkout,
+      # ale do lintów/testów często i tak robimy checkout.)
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compute tags
-        id: vars
+      - name: Debug paths
         run: |
-          echo "tag_sha=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "image_ref=${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "WORKSPACE: $GITHUB_WORKSPACE"
+          ls -la
+          ls -la DODATKOWE
+          ls -la DODATKOWE/docker-bake-actions-01
+          echo ${{ github.workspace}}
+          cat ${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Login do rejestru
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build & push obrazu z Twoim Dockerfile (ENTRYPOINT robi envsubst)
-      - name: Build & Push (Bake) with sha tag
+      # Generowanie tagów i ANNOTATIONS (OCI) dla obrazu
+      - name: Extract Docker metadata (tags & annotations)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          # tag wersji, tag sha oraz latest (DODANE latest)
+          tags: |
+            type=semver,pattern={{version}},value=0.1.0
+            type=sha,format=long
+            type=raw,value=latest
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+      # Build + Push (Bake) z tagami i adnotacjami z metadata-action
+      - name: Build (Bake) with annotations
         uses: docker/bake-action@v6
         with:
           files: |
-            # jeśli docker-bake.hcl masz w innym miejscu – podmień ścieżkę
-            cwd://docker-bake.hcl
+            cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
+            cwd://${{ steps.meta.outputs.bake-file-tags }}
+            cwd://${{ steps.meta.outputs.bake-file-annotations }}
           set: |
-            # kontekst i Dockerfile zgodnie z Twoim układem repo
-            web.context=cwd://
-            web.dockerfile=cwd://Dockerfile
-            # tagujemy TYLKO sha-<commit>
-            web.tags=${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag_sha }}
-            # przykładowy label z rewizją (poprawna składnia bake)
-            web.labels.org.opencontainers.image.revision=${{ github.sha }}
+            web.context=cwd://DODATKOWE/docker-bake-actions-01
+            web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
+            # Przekazujemy numer wersji do buildu (Twój Dockerfile ma ARG IMAGE_VERSION)
+            web.args.IMAGE_VERSION=${{ steps.meta.outputs.version }}
           push: true
+          # print: true
 
-      - name: Pull image (sha tag)
-        run: docker pull "${{ steps.vars.outputs.image_ref }}"
+      # ====== DODANE: wybór tagów i test kontenera ======
 
-      # ENTRYPOINT w obrazie:
-      #   envsubst < /usr/share/nginx/html/index.template.html > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'
-      # Podajemy więc zmienne, które mają być podstawione.
+      - name: Show generated tags (debug)
+        run: printf '%s\n' "${{ steps.meta.outputs.tags }}"
+
+      - name: Choose refs (sha, version, latest)
+        id: choose
+        run: |
+          set -euo pipefail
+          # Z outputs metadata-action bierzemy pełne refy repo:tag, np.:
+          #   piotrskoska/github-action-test:sha-<commit>
+          #   piotrskoska/github-action-test:0.1.0
+          #   piotrskoska/github-action-test:latest
+          version="$(printf '%s\n' "${{ steps.meta.outputs.version }}")"
+          sha_tag="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | awk -F: '/:sha-/ {print $2; exit}')"
+          ver_tag="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | awk -F: '/:[0-9]+\.[0-9]+\.[0-9]+$/ {print $2; exit}')"
+          latest_tag="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | awk -F: '/:latest$/ {print $2; exit}')"
+
+          echo "image_ref_sha=${{ env.IMAGE_NAME }}:${sha_tag}" >> $GITHUB_OUTPUT
+          echo "image_ref_ver=${{ env.IMAGE_NAME }}:${ver_tag}" >> $GITHUB_OUTPUT
+          echo "image_ref_latest=${{ env.IMAGE_NAME }}:${latest_tag}" >> $GITHUB_OUTPUT
+          echo "version=${version}" >> $GITHUB_OUTPUT
+
+      - name: Pull image (version + sha + latest)
+        run: |
+          docker pull "${{ steps.choose.outputs.image_ref_ver }}"
+          docker pull "${{ steps.choose.outputs.image_ref_sha }}"
+          docker pull "${{ steps.choose.outputs.image_ref_latest }}"
+
       - name: Run container (smoke + health)
         id: run_container
         env:
           APP_NAME: "demo-nginx"
           APP_ENV: "test-ci"
-          IMAGE_VERSION: "0.1.0"
+          IMAGE_VERSION: "${{ steps.choose.outputs.version }}"
         run: |
           set -euo pipefail
           docker rm -f websut 2>/dev/null || true
+          # Używamy taga WERSJI (czytelny w logach). ENTRYPOINT robi envsubst.
           docker run -d --rm --name websut -p 8080:80 \
             -e APP_NAME -e APP_ENV -e IMAGE_VERSION \
-            "${{ steps.vars.outputs.image_ref }}"
+            "${{ steps.choose.outputs.image_ref_ver }}"
 
-          # czekamy aż /healthz zacznie zwracać 'ok'
+          # Czekamy na /healthz == ok
           for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
-              echo "service healthy"
               exit 0
             fi
             sleep 1
           done
-
           echo "Service did not become healthy in time" >&2
           docker logs websut || true
           exit 1
 
-      - name: Verify homepage content (envsubst result)
+      - name: Verify homepage content (envsubst result + wersja)
         env:
           APP_NAME: "demo-nginx"
           APP_ENV: "test-ci"
-          IMAGE_VERSION: "0.1.0"
+          IMAGE_VERSION: "${{ steps.choose.outputs.version }}"
         run: |
           set -euo pipefail
           curl -fsS http://localhost:8080/ | tee /tmp/page.html
-
-          # Nagłówek strony
+          # Strona żyje
           grep -q 'Witaj z Nginx' /tmp/page.html
-
-          # Sprawdzamy, że PODMIANA działa (muszą być realne wartości, nie placeholdery)
+          # Podmienione wartości (NIE placeholdery)
           grep -q "<strong>${APP_NAME}</strong>" /tmp/page.html
           grep -q "<strong>${APP_ENV}</strong>" /tmp/page.html
-
-          # (opcjonalnie) wersja – jeśli template korzysta z ${IMAGE_VERSION}
-          # Usuń ten grep, jeśli w templacie nie ma wstawki na wersję.
-          grep -q "<strong>${IMAGE_VERSION}</strong>" /tmp/page.html || echo "Version not asserted (ok if not templated)"
+          # Wersja musi być obecna (template powinien używać ${IMAGE_VERSION})
+          grep -q "<strong>${IMAGE_VERSION}</strong>" /tmp/page.html
 
       - name: Show logs on failure
         if: failure()
