@@ -1,4 +1,4 @@
-name: "99 - Dodatkowe: Docker Bake Action 01"
+name: "99 - Dodatkowe: Docker Bake Action 02 Push"
 on:
   workflow_dispatch:
   #push:
