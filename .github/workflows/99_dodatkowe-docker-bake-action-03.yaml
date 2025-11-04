@@ -21,17 +21,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # (opcjonalny podgląd struktury repo, zostaw jeśli pomaga w debugowaniu)
-      - name: Debug paths
-        run: |
-          echo "WORKSPACE: $GITHUB_WORKSPACE"
-          ls -la
-          ls -la DODATKOWE || true
-          ls -la DODATKOWE/docker-bake-actions-01 || true
-          if [ -f "${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl" ]; then
-            cat ${{ github.workspace }}/DODATKOWE/docker-bake-actions-01/docker-bake.hcl
-          fi
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -41,60 +30,88 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Docker metadata (tags & annotations)
+      - name: Extract Docker metadata (tags, labels, annotations)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            # stały semver (jeśli chcesz utrzymywać go ręcznie)
+            # stały semver (jeśli chcesz go utrzymywać ręcznie)
             type=semver,pattern={{version}},value=0.1.0
             # zawsze dostępny tag po SHA commita
             type=sha,format=long
+            # opcjonalnie latest
+            type=raw,value=latest
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
-      - name: Build (Bake) with annotations (push)
+      - name: Build (Bake) + push (merge metadata via bake-file)
         uses: docker/bake-action@v6
         with:
           files: |
             cwd://DODATKOWE/docker-bake-actions-01/docker-bake.hcl
-            cwd://${{ steps.meta.outputs.bake-file-tags }}
-            cwd://${{ steps.meta.outputs.bake-file-annotations }}
+            ${{ steps.meta.outputs.bake-file }}  # <-- JEDEN scalony plik z metadata-action
           set: |
             web.context=cwd://DODATKOWE/docker-bake-actions-01
             web.dockerfile=cwd://DODATKOWE/docker-bake-actions-01/Dockerfile
           push: true
-          # print: true   # odkomentuj tymczasowo, aby podejrzeć finalny plan Bake
+          # print: true   # odkomentuj, żeby zobaczyć finalny plan (czy tagi są podpięte)
 
-      # --- WYBÓR TAGA, KTÓRY NA PEWNO ISTNIEJE ---
+      # --- WYBÓR ISTNIEJĄCEGO TAGA Z REJESTRU ---
 
-      - name: Print metadata tags (debug)
+      - name: Show metadata tags (debug)
         run: |
-          echo "Tags from metadata-action:"
+          echo "Metadata tags:"
           printf '%s\n' "${{ steps.meta.outputs.tags }}"
 
-      - name: Choose a pushed tag (prefer sha-*)
+      - name: Resolve image tag that exists in registry
         id: choose_tag
         run: |
           set -euo pipefail
-          # metadata-action zwraca pełne refy obrazu w wielu liniach (repo:tag)
-          # Preferujemy tag 'sha-*', bo jest gwarantowany przy każdym commicie.
-          sha_line="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | awk -F':' '/:sha-/ {print; exit}')"
-          if [ -n "$sha_line" ]; then
-            image_ref="$sha_line"
-          else
-            # fallback: bierzemy pierwszą linię (np. semver 0.1.0), jeśli istnieje
-            image_ref="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | head -n1)"
-          fi
-          # Wyciągamy sam tag po dwukropku, ale zachowujemy też pełny ref do pulla
-          tag="$(printf '%s' "$image_ref" | awk -F':' '{print $2}')"
-          echo "tag=$tag" >> $GITHUB_OUTPUT
-          echo "image_ref=${{ env.IMAGE_NAME }}:$tag" >> $GITHUB_OUTPUT
-          echo "Chosen image ref: ${{ env.IMAGE_NAME }}:$tag"
+          # Kolejność preferencji: sha-* -> semver -> latest
+          preferred_order="sha- ^[0-9]+\.[0-9]+\.[0-9]+$ latest"
 
-      - name: Inspect manifest (sanity check)
-        run: docker buildx imagetools inspect "${{ steps.choose_tag.outputs.image_ref }}"
+          # Zbierz listę refów (repo:tag) z metadata-action
+          mapfile -t REFS < <(printf '%s\n' "${{ steps.meta.outputs.tags }}")
+
+          chosen_ref=""
+          # Najpierw spróbuj zgodnie z preferencjami
+          for pat in $preferred_order; do
+            for ref in "${REFS[@]}"; do
+              tag="${ref##*:}"
+              if [[ "$pat" == "sha-" && "$tag" == sha-* ]]; then
+                if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
+                  chosen_ref="$ref"; break 2
+                fi
+              elif [[ "$pat" == "latest" && "$tag" == "latest" ]]; then
+                if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
+                  chosen_ref="$ref"; break 2
+                fi
+              elif [[ "$pat" =~ ^\^ && "$tag" =~ $pat ]]; then
+                if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
+                  chosen_ref="$ref"; break 2
+                fi
+              fi
+            done
+          done
+
+          # Jeśli jeszcze nic nie znaleziono, spróbuj po kolei wszystkie
+          if [[ -z "$chosen_ref" ]]; then
+            for ref in "${REFS[@]}"; do
+              if docker buildx imagetools inspect "$ref" >/dev/null 2>&1; then
+                chosen_ref="$ref"; break
+              fi
+            done
+          fi
+
+          if [[ -z "$chosen_ref" ]]; then
+            echo "Żaden z tagów nie istnieje w rejestrze. Sprawdź krok Bake/Push i print planu." >&2
+            printf 'Kandydaci:\n%s\n' "${REFS[@]}" >&2
+            exit 1
+          fi
+
+          echo "image_ref=$chosen_ref" >> $GITHUB_OUTPUT
+          echo "Wybrany obraz: $chosen_ref"
 
       - name: Pull just-pushed image
         run: docker pull "${{ steps.choose_tag.outputs.image_ref }}"
@@ -113,7 +130,7 @@ jobs:
             -e APP_NAME -e APP_ENV \
             "${{ steps.choose_tag.outputs.image_ref }}"
 
-          # Czekamy aż endpoint zdrowia zacznie zwracać 'ok'
+          # Czekamy aż /healthz zacznie zwracać 'ok'
           for i in {1..40}; do
             if curl -fsS http://localhost:8080/healthz | grep -q '^ok$'; then
               echo "service healthy"
@@ -130,9 +147,8 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsS http://localhost:8080/ | tee /tmp/page.html
-          # Spodziewane stałe fragmenty strony (dopasuj do własnego index.template.html)
+          # Dopasuj te grepy do Twojego index.template.html:
           grep -q 'Witaj z Nginx' /tmp/page.html
-          # Zmienne środowiskowe podmienione przez envsubst
           grep -q '<strong>demo-nginx</strong>' /tmp/page.html
           grep -q '<strong>test-ci</strong>' /tmp/page.html
 
