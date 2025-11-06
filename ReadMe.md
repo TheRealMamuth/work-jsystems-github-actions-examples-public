@@ -27,7 +27,11 @@
 6. https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/manage-larger-runners
 7. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
-
+## Using Third-Party Actions:
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsuses
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_iduses
+3. https://github.com/marketplace?type=actions
+4. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/set-default-values-for-jobs
 
 
 
@@ -41,8 +45,6 @@
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
 
 4: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions#functions
-
-5: https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
 6: https://docs.github.com/en/billing/concepts/product-billing/github-actions
 
