@@ -37,7 +37,10 @@
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpull_requestpull_request_targetbranchesbranches-ignore
 2. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 
-
+## 06 Using Context
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+2. https://docs.github.com/en/actions/concepts/workflows-and-actions/contexts
+3. https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#available-contexts
 
 
 
