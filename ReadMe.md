@@ -41,7 +41,9 @@
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
 2. https://docs.github.com/en/actions/concepts/workflows-and-actions/contexts
 3. https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#available-contexts
-
+4. https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#inputs
+5. https://docs.github.com/en/enterprise-cloud@latest/actions/reference/workflows-and-actions/contexts#inputs-context
+6. https://docs.github.com/en/enterprise-cloud@latest/actions/reference/workflows-and-actions/workflow-syntax#run-name
 
 
 
