@@ -25,3 +25,4 @@ jobs:
       - name: Display GitHub Context Information
         run: |
           env
+          echo "${{ inputs.debug }}"
