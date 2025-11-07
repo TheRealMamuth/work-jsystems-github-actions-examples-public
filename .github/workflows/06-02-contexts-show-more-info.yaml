@@ -6,6 +6,10 @@ run-name: 06 - Contexts | Show More Info
 
 on:
   workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        default: false
 
 env:
   MY_WORKFLOW_VAR: 'workflow'
