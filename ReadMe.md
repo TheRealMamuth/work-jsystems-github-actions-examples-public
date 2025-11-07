@@ -8,14 +8,14 @@
 5. https://docs.github.com/en/actions/get-started/actions-vs-apps
 6. https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository
 
-## Githuba actions bulding blocks
+## 01 Githuba actions bulding blocks
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 
-## Event Triggers:
+## 02 Event Triggers:
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 2. https://crontab.cronhub.io/
 
-## Workflow runners:
+## 03 Workflow runners:
 1. https://docs.github.com/en/actions/reference/runners/github-hosted-runners
    - https://docs.github.com/en/actions/concepts/runners/github-hosted-runners
 2. https://docs.github.com/en/actions/reference/runners/larger-runners
@@ -27,13 +27,15 @@
 6. https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/manage-larger-runners
 7. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
-## Using Third-Party Actions:
+## 04 Using Third-Party Actions:
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsuses
 2. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_iduses
 3. https://github.com/marketplace?type=actions
 4. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/set-default-values-for-jobs
 
-
+## 05 Event Filters and Activity Types
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpull_requestpull_request_targetbranchesbranches-ignore
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 
 
 
