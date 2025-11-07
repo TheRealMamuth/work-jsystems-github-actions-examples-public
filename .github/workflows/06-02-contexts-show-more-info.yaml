@@ -1,7 +1,7 @@
 # See 06-contexts/README.md for more information
 # about the how to use contexts in GitHub Actions.
 
-name: 06 - Contexts
+name: 06 - Contexts Show More Info
 run-name: 06 - Contexts | Show More Info
 
 on:
