@@ -1,6 +1,7 @@
 # Dokumentacja:
 
 ## Github actions:
+0. https://docs.github.com/en/actions
 1. https://docs.github.com/en/actions/get-started/quickstart
 2. https://docs.github.com/en/actions/get-started/understand-github-actions
 3. https://docs.github.com/en/actions/get-started/continuous-integration
@@ -49,12 +50,21 @@
 1. https://docs.github.com/en/actions/concepts/workflows-and-actions/expressions
 2. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
 
-## 08 Variables
+## 08 Expressions and Variables
 1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables
 2. https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
 3. https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments
 4. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 5. https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
+
+## 09 Functions
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#functions
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#status-check-functions
+3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands
+
+
+
+
 
 
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
