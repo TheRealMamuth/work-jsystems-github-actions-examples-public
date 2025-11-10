@@ -63,9 +63,10 @@
 3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands
 
 ## 10 Controlling the Execution Flow
-
-
-
+1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions
+2. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs
+3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds
+4. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/pass-job-outputs
 
 
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
