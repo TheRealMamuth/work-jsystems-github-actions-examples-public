@@ -67,6 +67,26 @@
 2. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs
 3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds
 4. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/pass-job-outputs
+5. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepscontinue-on-error
+6. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#example-returning-a-json-data-type
+
+## 11 Inputs
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callinputs
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callinputsinput_idtype
+3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs
+4. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputsinput_idrequired
+5. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputsinput_idtype
+6. https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#inputs-context
+7. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_call
+8. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch
+9. https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#inputs
+
+
+
+
+
+
+
 
 
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
