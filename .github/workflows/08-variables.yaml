@@ -72,3 +72,4 @@ jobs:
       - name: Print Undefined Variables
         run: |
           echo "Org var: ${{ env.UNDEFINED_VAR_WITH_DEFAULT }}"
+          echo "Org var: ${{ vars.UNDEFINED_VAR_WITH_DEFAULT }}"
