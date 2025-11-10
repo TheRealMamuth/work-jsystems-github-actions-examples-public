@@ -50,6 +50,11 @@
 2. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
 
 ## 08 Variables
+1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
+3. https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments
+4. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
+5. https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
 
 
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
