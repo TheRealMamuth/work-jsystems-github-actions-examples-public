@@ -25,6 +25,13 @@
    - https://docs.github.com/en/actions/concepts/runners/self-hosted-runners
 4. https://docs.github.com/en/actions/how-tos/manage-runners/github-hosted-runners/use-github-hosted-runners
 5. https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners
+   - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners
+   - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners
+   - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels
+   - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/customize-containers
+   - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/configure-the-application
+   - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/use-in-a-workflow
+   
 6. https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/manage-larger-runners
 7. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
