@@ -51,7 +51,7 @@ jobs:
 
       # Uruchomienie kontenera przez Docker Compose (w tle)
       - name: Compose up
-        uses: isbang/compose-action@v1
+        uses: isbang/compose-action@v2
         with:
           compose-file: ${{ github.workspace }}/CWICZENIA/04-praca-z-zewnetrzymi-akcjami/docker-app-02/docker-compose.yml
           down-flags: --volumes --remove-orphans
@@ -128,7 +128,7 @@ jobs:
       # Sprzątanie: compose down (zawsze)
       - name: Compose down (always)
         if: always()
-        uses: isbang/compose-action@v1
+        uses: isbang/compose-action@v2
         with:
           compose-file: ${{ github.workspace }}/CWICZENIA/04-praca-z-zewnetrzymi-akcjami/docker-app-02/docker-compose.yml
           commands: down --volumes --remove-orphans
