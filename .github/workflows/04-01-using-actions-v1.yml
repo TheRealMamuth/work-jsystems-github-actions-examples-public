@@ -1,7 +1,7 @@
 # See 04-using-actions/README.md for more information
 # about using actions within workflows.
 
-name: 04 - Using Actions
+name: 04-01 - Using Actions
 
 on: workflow_dispatch
 
