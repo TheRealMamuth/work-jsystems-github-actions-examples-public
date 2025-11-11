@@ -28,10 +28,18 @@
    - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners
    - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners
    - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels
+     - https://docs.github.com/en/actions/concepts/runners/actions-runner-controller#using-arc-runners-in-a-workflow
+     - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels#creating-a-custom-label-for-a-repository-runner
+     - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels#creating-a-custom-label-for-an-organization-runner
+     - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels#assigning-a-label-to-a-repository-runner
+     - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels#assigning-a-label-to-an-organization-runner
+     - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels#removing-a-custom-label-from-a-repository-runner
+     - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/apply-labels#removing-a-custom-label-from-an-organization-runner
+     - https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images
    - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/customize-containers
    - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/configure-the-application
    - https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/use-in-a-workflow
-   
+
 6. https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/manage-larger-runners
 7. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
