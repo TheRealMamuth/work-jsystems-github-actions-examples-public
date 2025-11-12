@@ -58,6 +58,9 @@ jobs:
   # --------------------------------------------------
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CWICZENIA/04-praca-z-zewnetrzymi-akcjami/react-app
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -89,11 +92,14 @@ jobs:
   unit:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CWICZENIA/04-praca-z-zewnetrzymi-akcjami/react-app
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
       - name: Testy jednostkowe
-        run: npm test -- --reporter=junit
+        run: npm test
 
   # ------------------------------------------------------------------
   # 4) SECURITY: może się “pominąć” na PR-ach z gałęzi feature/*
@@ -112,6 +118,9 @@ jobs:
   # -------------------------------------------------------------------
   e2e:
     needs: [prep, build]
+    defaults:
+      run:
+        working-directory: CWICZENIA/04-praca-z-zewnetrzymi-akcjami/react-app
     if: ${{ needs.prep.outputs.should_run_e2e == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -160,13 +169,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy
-        run: ./scripts/deploy.sh
+        run: |
+          echo "./scripts/deploy.sh"
       - name: Post-deploy weryfikacja
         if: ${{ success() }}
-        run: ./scripts/post_deploy_check.sh
+        run: |
+          echo "./scripts/post_deploy_check.sh"
       - name: Cleanup (zawsze)
         if: ${{ always() }}
-        run: ./scripts/cleanup.sh
+        run: |
+          echo "./scripts/cleanup.sh"
 
   # -----------------------------------------------------------------------------------------
   # 9) RAPORT: zawsze — zbieramy statusy poprzedników, nawet gdy run został anulowany/padł.
