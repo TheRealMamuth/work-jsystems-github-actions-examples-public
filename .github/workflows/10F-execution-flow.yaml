@@ -80,7 +80,8 @@ jobs:
 
       - name: Artefakt (tylko Linux)
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: echo "Tu zwykle: upload-artifact"
+        run: |
+          echo "Tu zwykle: upload-artifact"
 
   # -------------------------------------------------------
   # 3) UNIT TESTS: zależne od zadań build (AND po needs)
