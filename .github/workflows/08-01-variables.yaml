@@ -1,7 +1,7 @@
 # See 08-variables/README.md for more information
 # about the how to use variables in GitHub Actions.
 
-name: 08 - Using Variables
+name: 08_01 - Using Variables
 
 on:
   workflow_dispatch:
