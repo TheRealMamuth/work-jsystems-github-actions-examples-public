@@ -97,6 +97,8 @@
 7. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_call
 8. https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch
 9. https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#inputs
+10. https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows
+11. https://github.com/marketplace/actions/interactive-inputs#interactive-inputs
 
 
 
