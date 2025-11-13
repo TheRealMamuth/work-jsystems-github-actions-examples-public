@@ -66,11 +66,13 @@ jobs:
           APP_ENV="${{ inputs.app_env }}"
           BUILD_NUMBER="${{ inputs.build_number }}"
 
-          # tag będzie np. dev-1, staging-5, prod-42
+          # tag będzie np. dev-1
           IMAGE_TAG="${APP_ENV}-${BUILD_NUMBER}"
 
-          # ghcr.io/<owner>/<image_name>:<tag>
-          IMAGE_URI="ghcr.io/${{ github.repository_owner }}/${IMAGE_NAME}:${IMAGE_TAG}"
+          # owner musi być lowercase dla GHCR!
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          IMAGE_URI="ghcr.io/${OWNER_LOWER}/${IMAGE_NAME}:${IMAGE_TAG}"
 
           echo "Buduję obraz: ${IMAGE_URI}"
 
