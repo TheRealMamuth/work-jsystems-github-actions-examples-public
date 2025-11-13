@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       build-status:
+        description: "Status builda"
         type: choice
         options:
           - success
