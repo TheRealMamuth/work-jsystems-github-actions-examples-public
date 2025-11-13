@@ -100,11 +100,13 @@
 10. https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows
 11. https://github.com/marketplace/actions/interactive-inputs#interactive-inputs
 
-
-
-
-
-
+## 12 Outputs
+1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/pass-job-outputs
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-output-parameter
+3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+4. https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+5. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
+6. https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows
 
 
 
