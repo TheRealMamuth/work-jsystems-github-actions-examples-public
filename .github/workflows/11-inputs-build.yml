@@ -33,6 +33,10 @@ on:
         description: "GitHub Environment (np. dev-env, staging-env, prod-env)"
         type: environment
         required: true
+defaults:
+  run:
+   shell: bash
+   working-directory: ./CWICZENIA/11-inputs
 
 jobs:
   build-and-optional-push:
@@ -79,8 +83,7 @@ jobs:
           docker build \
             --build-arg APP_ENV="${APP_ENV}" \
             --build-arg BUILD_NUMBER="${BUILD_NUMBER}" \
-            -t "${IMAGE_URI}" \
-            11-inputs
+            -t "${IMAGE_URI}" .
 
           echo "Gotowy lokalny obraz: ${IMAGE_URI}"
 
