@@ -28,7 +28,7 @@ jobs:
       - name: Build Docker image (with cache)
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./CWICZENIA/13-caching/docker01
           file: ./Dockerfile
 
           # Nie pushujemy obrazu do rejestru – przykład tylko do builda
