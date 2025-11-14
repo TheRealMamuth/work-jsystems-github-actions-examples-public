@@ -5,6 +5,8 @@ on:
     workflows: ["14-01-start-build"]
     types:
       - completed
+    branches:
+      - CW14
 
 jobs:
   deploy:
