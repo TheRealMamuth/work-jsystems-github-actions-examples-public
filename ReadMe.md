@@ -115,7 +115,16 @@
 4. https://docs.docker.com/build/cache/backends/gha/
 
 ## 14 Artifacts
-1. 
+1. https://github.blog/news-insights/product-news/get-started-with-v4-of-github-actions-artifacts/
+2. https://docs.github.com/en/actions/tutorials/store-and-share-data
+3. https://github.com/actions/upload-artifact
+4. https://docs.github.com/en/actions/concepts/workflows-and-actions/workflow-artifacts
+5. https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts
+6. https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28
+
+
+
+
 
 
 
