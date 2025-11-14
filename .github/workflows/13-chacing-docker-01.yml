@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./CWICZENIA/13-caching/docker01
-          file: ./Dockerfile
+          file: ./CWICZENIA/13-caching/docker01/Dockerfile
 
           # Nie pushujemy obrazu do rejestru – przykład tylko do builda
           push: false
