@@ -1,0 +1,19 @@
+name: 14 Copy from other workflow - deploy
+
+on:
+  workflow_run:
+    workflows: ["14-01-start-build"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+
+      - name: Show file
+        run: cat output.txt
