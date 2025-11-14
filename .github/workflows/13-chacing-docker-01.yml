@@ -1,9 +1,10 @@
-name: 13 Build Docker image with cache 01
+name: 13-01 Build Docker image with cache 01
 
 on:
   push:
-    branches: [ main ]
+    branches: [ cw13 ]
   pull_request:
+  workflow_dispatch:
 
 
 defaults:

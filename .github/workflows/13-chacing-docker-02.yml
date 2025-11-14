@@ -1,9 +1,10 @@
-name: 13 Build Docker image with actions/cache 02
+name: 13-02 Build Docker image with actions/cache 02
 
 on:
   push:
-    branches: [ main ]
+    branches: [ cw13 ]
   pull_request:
+  workflow_dispatch:
 
 defaults:
   run:
