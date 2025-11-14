@@ -122,6 +122,19 @@
 5. https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts
 6. https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28
 
+## 15 Matrices
+1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+2. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix
+3. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategy
+
+
+## 16 Enviroments
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idenvironment
+2. https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
+3. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/deploy-to-environment
+4. https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
+5. https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments
+
 
 
 
