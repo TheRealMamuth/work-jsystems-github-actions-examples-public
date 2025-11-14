@@ -108,6 +108,14 @@
 5. https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
 6. https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows
 
+## 13 Caching
+1. https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching
+2. https://github.com/actions/cache
+3. https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manage-caches
+4. https://docs.docker.com/build/cache/backends/gha/
+
+
+
 
 
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
