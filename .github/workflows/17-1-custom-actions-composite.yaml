@@ -15,7 +15,7 @@ on:
           - prod
 
 env:
-  working-directory: 17-custom-actions/react-app
+  working-directory: CWICZENIA/17-custom-actions/react-app
 jobs:
   build:
     runs-on: ubuntu-latest
