@@ -161,7 +161,7 @@ jobs:
 
     env:
       APP_ENV: prod
-      IMAGE_TAG: latest   # tag w Docker Hub: piotrskoska/github-action-test:latest
+      IMAGE_TAG: production   # tag w Docker Hub: piotrskoska/github-action-test:production
 
     steps:
       - name: Checkout repository
