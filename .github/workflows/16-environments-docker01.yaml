@@ -1,4 +1,4 @@
-name: Docker matrix build / test / push (env + registries)
+name: Docker matrix build / test / push (only Docker Hub)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - master
   pull_request:
 
-# Globalne ustawienia dla wszystkich kroków run:
+# Globalne ustawienia dla wszystkich stepów run:
 defaults:
   run:
     shell: bash
@@ -56,7 +56,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ matrix.environment }}
-          # ścieżka względem root repo (NIE working-directory)
           path: ./CWICZENIA/16-environments/docker01/image.tar
 
 # ===================== JOB 2: TEST (dev + staging) =======================
@@ -104,7 +103,7 @@ jobs:
 
           echo "✅ TEST PASSED"
 
-# ===================== JOB 3: PUSH dev + staging (GHCR) ==================
+# ===================== JOB 3: PUSH dev + staging (Docker Hub) ============
   push-nonprod:
     runs-on: ubuntu-latest
     needs: test
@@ -119,7 +118,7 @@ jobs:
             app_env: staging
             image_tag: staging
 
-    # używamy GitHub Environments: development / staging
+    # dalej możesz korzystać z GitHub Environments (development / staging)
     environment: ${{ matrix.environment }}
 
     steps:
@@ -136,20 +135,17 @@ jobs:
         run: |
           docker load -i image.tar
 
-      - name: Compute FULL_IMAGE for GHCR
+      - name: Compute FULL_IMAGE for Docker Hub (non-prod)
         run: |
-          OWNER="${{ github.repository_owner }}"
-          OWNER_LC=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
-
-          FULL_IMAGE="ghcr.io/${OWNER_LC}/${IMAGE_NAME}:${{ matrix.image_tag }}"
+          FULL_IMAGE="${DOCKERHUB_REPO}:${{ matrix.image_tag }}"
           echo "FULL_IMAGE=$FULL_IMAGE" >> "$GITHUB_ENV"
-          echo "Full image (GHCR): $FULL_IMAGE"
+          echo "Non-prod image: $FULL_IMAGE"
 
-      - name: Login to GitHub Container Registry (GHCR) using GITHUB_TOKEN
+      - name: Login to Docker Hub
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "piotrskoska" --password-stdin
 
-      - name: Tag and push image to GHCR
+      - name: Tag and push image (non-prod)
         run: |
           echo "Tagging ${IMAGE_NAME}:${{ matrix.image_tag }} -> $FULL_IMAGE"
           docker tag "${IMAGE_NAME}:${{ matrix.image_tag }}" "$FULL_IMAGE"
@@ -196,7 +192,7 @@ jobs:
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "piotrskoska" --password-stdin
 
-      - name: Compute FULL_IMAGE for Docker Hub
+      - name: Compute FULL_IMAGE for Docker Hub (prod)
         run: |
           FULL_IMAGE="${DOCKERHUB_REPO}:${IMAGE_TAG}"
           echo "FULL_IMAGE=$FULL_IMAGE" >> "$GITHUB_ENV"
