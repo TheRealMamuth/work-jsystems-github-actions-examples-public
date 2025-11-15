@@ -135,7 +135,10 @@
 4. https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
 5. https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments
 
-
+## 17 Custom Actions
+1. https://docs.github.com/en/actions/concepts/workflows-and-actions/custom-actions
+2. https://docs.github.com/en/actions/how-tos/create-and-publish-actions
+3. https://docs.github.com/en/actions/how-tos/create-and-publish-actions/manage-custom-actions
 
 
 
