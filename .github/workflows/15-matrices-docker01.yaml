@@ -9,6 +9,11 @@ on:
       - cw15
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+    working-directory: ./CWICZENIA/15-matrices/docker01
+
 jobs:
   build:
     runs-on: ubuntu-latest
