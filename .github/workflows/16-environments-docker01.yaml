@@ -7,6 +7,7 @@ on:
       - master
   pull_request:
 
+# Globalne ustawienia dla wszystkich kroków run:
 defaults:
   run:
     shell: bash
@@ -55,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ matrix.environment }}
-          # pełna ścieżka względem root repo
+          # ścieżka względem root repo (NIE working-directory)
           path: ./CWICZENIA/16-environments/docker01/image.tar
 
 # ===================== JOB 2: TEST (dev + staging) =======================
@@ -81,7 +82,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ matrix.environment }}
-          # pobierz artefakt do tego samego katalogu, gdzie jest working-directory
           path: ./CWICZENIA/16-environments/docker01
 
       - name: Load Docker image from artifact
@@ -119,6 +119,7 @@ jobs:
             app_env: staging
             image_tag: staging
 
+    # używamy GitHub Environments: development / staging
     environment: ${{ matrix.environment }}
 
     steps:
@@ -142,11 +143,11 @@ jobs:
 
           FULL_IMAGE="ghcr.io/${OWNER_LC}/${IMAGE_NAME}:${{ matrix.image_tag }}"
           echo "FULL_IMAGE=$FULL_IMAGE" >> "$GITHUB_ENV"
-          echo "Full image: $FULL_IMAGE"
+          echo "Full image (GHCR): $FULL_IMAGE"
 
-      - name: Login to GitHub Container Registry
+      - name: Login to GitHub Container Registry (GHCR) using GITHUB_TOKEN
         run: |
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Tag and push image to GHCR
         run: |
@@ -158,12 +159,13 @@ jobs:
 # ===================== JOB 4: PRODUCTION (Docker Hub) ====================
   production:
     runs-on: ubuntu-latest
+    # wystartuje dopiero, gdy WSZYSTKIE matrixy jobu "test" przejdą (dev + staging)
     needs: test
     environment: production
 
     env:
       APP_ENV: prod
-      IMAGE_TAG: latest
+      IMAGE_TAG: latest   # tag w Docker Hub: piotrskoska/github-action-test:latest
 
     steps:
       - name: Checkout repository
