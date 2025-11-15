@@ -3,9 +3,11 @@ name: 16_02 - Docker matrix build / test / push (only Docker Hub)
 on:
   push:
     branches:
-      - main
-      - master
+      - cw16
   pull_request:
+    branches:
+      - cw16
+  workflow_dispatch:
 
 # Globalne ustawienia dla wszystkich stepów run:
 defaults:
