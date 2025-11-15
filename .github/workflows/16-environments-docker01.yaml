@@ -1,4 +1,4 @@
-name: 16 Docker matrix build / test / push (env + registries)
+name: Docker matrix build / test / push (env + registries)
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
       - master
   pull_request:
 
-# Globalne ustawienia – tak jak chciałeś
 defaults:
   run:
     shell: bash
@@ -56,7 +55,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ matrix.environment }}
-          path: image.tar
+          # pełna ścieżka względem root repo
+          path: ./CWICZENIA/16-environments/docker01/image.tar
 
 # ===================== JOB 2: TEST (dev + staging) =======================
   test:
@@ -81,10 +81,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ matrix.environment }}
-          path: .
+          # pobierz artefakt do tego samego katalogu, gdzie jest working-directory
+          path: ./CWICZENIA/16-environments/docker01
 
       - name: Load Docker image from artifact
         run: |
+          ls -l
           docker load -i image.tar
 
       - name: Test Docker image
@@ -117,7 +119,6 @@ jobs:
             app_env: staging
             image_tag: staging
 
-    # tutaj podpinamy GitHub Environments: development / staging
     environment: ${{ matrix.environment }}
 
     steps:
@@ -128,7 +129,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ matrix.environment }}
-          path: .
+          path: ./CWICZENIA/16-environments/docker01
 
       - name: Load Docker image from artifact
         run: |
@@ -157,13 +158,12 @@ jobs:
 # ===================== JOB 4: PRODUCTION (Docker Hub) ====================
   production:
     runs-on: ubuntu-latest
-    # wystartuje dopiero, gdy WSZYSTKIE matrixy jobu "test" przejdą (dev + staging)
     needs: test
     environment: production
 
     env:
       APP_ENV: prod
-      IMAGE_TAG: latest   # albo np. prod, albo sha – jak wolisz
+      IMAGE_TAG: latest
 
     steps:
       - name: Checkout repository
