@@ -8,6 +8,9 @@
 4. https://docs.github.com/en/actions/get-started/continuous-deployment
 5. https://docs.github.com/en/actions/get-started/actions-vs-apps
 6. https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository
+7. https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers
+8. https://docs.github.com/en/actions/tutorials
+9. https://docs.github.com/en/actions/get-started/understand-github-actions
 
 ## 01 Githuba actions bulding blocks
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
@@ -42,12 +45,36 @@
 
 6. https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/manage-larger-runners
 7. https://docs.github.com/en/actions/reference/workflows-and-actions/variables
+8. https://docs.github.com/en/actions/how-tos/write-workflows
+9. https://docs.github.com/en/actions/concepts/workflows-and-actions/workflows
 
 ## 04 Using Third-Party Actions:
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsuses
 2. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_iduses
 3. https://github.com/marketplace?type=actions
 4. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/set-default-values-for-jobs
+5. https://docs.docker.com/build/ci/github-actions/
+6. https://docs.docker.com/build/ci/github-actions/annotations/
+7. https://docs.docker.com/build/ci/github-actions/attestations/
+8. https://docs.docker.com/build/ci/github-actions/checks/
+9. https://docs.docker.com/build/ci/github-actions/secrets/
+10. https://docs.docker.com/build/ci/github-actions/build-summary/
+11. https://docs.docker.com/build/ci/github-actions/configure-builder/
+12. https://docs.docker.com/build/ci/github-actions/cache/
+13. https://docs.docker.com/build/ci/github-actions/copy-image-registries/
+14. https://docs.docker.com/build/ci/github-actions/export-docker/
+15. https://docs.docker.com/build/ci/github-actions/local-registry/
+16. https://docs.docker.com/build/ci/github-actions/multi-platform/
+17. https://docs.docker.com/build/ci/github-actions/named-contexts/
+18. https://docs.docker.com/build/ci/github-actions/push-multi-registries/
+19. https://docs.docker.com/build/ci/github-actions/reproducible-builds/
+20. https://docs.docker.com/build/ci/github-actions/share-image-jobs/
+21. https://docs.docker.com/build/ci/github-actions/manage-tags-labels/
+22. https://docs.docker.com/build/ci/github-actions/test-before-push/
+24. https://docs.docker.com/build/ci/github-actions/update-dockerhub-desc/
+25. https://docs.github.com/en/actions/reference/workflows-and-actions/dockerfile-support
+26. https://github.com/docker/bake-action
+27. https://github.com/marketplace/actions/docker-buildx-bake
 
 ## 05 Event Filters and Activity Types
 1. https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpull_requestpull_request_targetbranchesbranches-ignore
@@ -121,6 +148,7 @@
 4. https://docs.github.com/en/actions/concepts/workflows-and-actions/workflow-artifacts
 5. https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts
 6. https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28
+7. https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts
 
 ## 15 Matrices
 1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
@@ -139,9 +167,25 @@
 1. https://docs.github.com/en/actions/concepts/workflows-and-actions/custom-actions
 2. https://docs.github.com/en/actions/how-tos/create-and-publish-actions
 3. https://docs.github.com/en/actions/how-tos/create-and-publish-actions/manage-custom-actions
+4. https://docs.github.com/en/actions/tutorials/use-containerized-services/create-a-docker-container-action
+5. https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container
+6. https://docs.github.com/en/actions/concepts/workflows-and-actions/custom-actions
 
+## Secrets:
+1. https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+2. https://docs.github.com/en/actions/reference/security/secure-use
 
+## BVest Practices
+0. https://docs.github.com/en/copilot/get-started/best-practices
+1. https://docs.github.com/en/repositories/creating-and-managing-repositories/best-practices-for-repositories
+2. https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/best-practices-for-projects
+3. https://docs.github.com/en/contributing/writing-for-github-docs/best-practices-for-github-docs
+4. https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/best-practices-for-organizations
+5. https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/best-practices-for-creating-a-github-app
 
+## reuseing workflows
+1. https://docs.github.com/en/actions/concepts/workflows-and-actions/reusing-workflow-configurations
+2. https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows
 
 
 3: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions?search-overlay-input=functions
