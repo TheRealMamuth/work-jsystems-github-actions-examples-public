@@ -20,6 +20,10 @@ jobs:
   pogoda-info:
     name: Pobierz informacje o pogodzie
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./CWICZENIA/06-context/pogoda
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
