@@ -1,0 +1,54 @@
+name: "06-06 - Pogoda API CI"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: python_pogoda:test
+      WORKDIR: ./CWICZENIA/06-context/pogoda_python_flusk
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t "$IMAGE_NAME" "$WORKDIR"
+
+      - name: Run container
+        run: |
+          docker run -d \
+            --name pogoda_api \
+            -p 8000:8000 \
+            -e OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}" \
+            "$IMAGE_NAME"
+
+      - name: Wait for API to be ready
+        run: |
+          echo "Czekam na start API..."
+          sleep 10
+
+      - name: Test /weather endpoint via curl
+        run: |
+          set -e
+          echo "Testowanie endpointu /weather..."
+          # Test z przekazaniem api_key w query (żeby nie polegać na ENV w kontenerze)
+          curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${{ secrets.OPENWEATHER_API_KEY }}"
+          echo
+          echo "OK - endpoint /weather zwrócił odpowiedź 2xx."
+
+      - name: Show container logs (for debug on failure)
+        if: failure()
+        run: |
+          echo "Logi kontenera:"
+          docker logs pogoda_api || true
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop pogoda_api || true
+          docker rm pogoda_api || true
