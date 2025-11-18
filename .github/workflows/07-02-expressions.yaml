@@ -1,4 +1,4 @@
-name: 07-02 Pogoda API CI
+name: 07-02b Pogoda API CI
 
 on:
   push:
@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
 
 env:
-  WORKDIR: ./CWICZENIA/06-context/pogoda_python_flusk
+  WORKDIR: ./CWICZENIA/07-expressions/pogoda_python_flusk
   TEST_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda:test
   HUB_IMAGE_BASE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda
-  # (NOWE) Ustal środowisko na podstawie gałęzi
-  DEPLOY_ENV: ${{ github.ref == 'refs/heads/main' && 'prod07' || 'dev07' }}
+  # środowisko w zależności od gałęzi
+  DEPLOY_ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
 jobs:
   # =====================
@@ -37,8 +37,7 @@ jobs:
           push: false
 
       - name: Save image to tar
-        run: |
-          docker save "${{ env.TEST_IMAGE }}" -o image.tar
+        run: docker save "${{ env.TEST_IMAGE }}" -o image.tar
 
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
@@ -53,11 +52,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
 
-    # (NOWE) Przykład: pozwól pominąć testy na push, jeśli commit ma [skip tests]
-    #  - Na pull_request testy zawsze się uruchomią
+    # testy:
+    # - zawsze na pull_request
+    # - na push tylko jeśli commit NIE zawiera [skip tests]
     if: >
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip tests]'))
+
+    env:
+      # przerzucamy sekret do env – to możemy potem użyć w if:
+      OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
 
     steps:
       - name: Download image artifact
@@ -66,38 +70,35 @@ jobs:
           name: pogoda-image
 
       - name: Load Docker image
-        run: |
-          docker load -i image.tar
+        run: docker load -i image.tar
 
-      # (NOWE) Sprawdź, czy sekret jest ustawiony – przerwij job, jeśli go nie ma
-      - name: Sprawdź czy mamy OPENWEATHER_API_KEY
-        if: secrets.OPENWEATHER_API_KEY == ''
+      - name: Validate OPENWEATHER_API_KEY
+        if: env.OPENWEATHER_API_KEY == ''
         run: |
-          echo "Brak sekretu OPENWEATHER_API_KEY – nie mogę uruchomić testów API."
+          echo "❌ Brak sekretu OPENWEATHER_API_KEY – testy API nie mogą zostać uruchomione."
           exit 1
 
       - name: Run container
-        # (NOWE) Ten krok nie ma sensu, jeśli wcześniej wykryliśmy brak sekretu
-        if: secrets.OPENWEATHER_API_KEY != ''
+        if: env.OPENWEATHER_API_KEY != ''
         run: |
           docker run -d \
             --name pogoda_api \
             -p 8000:8000 \
-            -e OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}" \
+            -e OPENWEATHER_API_KEY="${{ env.OPENWEATHER_API_KEY }}" \
             "${{ env.TEST_IMAGE }}"
 
       - name: Wait for API to be ready
-        if: secrets.OPENWEATHER_API_KEY != ''
+        if: env.OPENWEATHER_API_KEY != ''
         run: |
           echo "Czekam na start API..."
           sleep 10
 
       - name: Test /weather endpoint via curl
-        if: secrets.OPENWEATHER_API_KEY != ''
+        if: env.OPENWEATHER_API_KEY != ''
         run: |
           set -e
           echo "Testowanie endpointu /weather..."
-          curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${{ secrets.OPENWEATHER_API_KEY }}"
+          curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${{ env.OPENWEATHER_API_KEY }}"
           echo
           echo "OK - endpoint /weather zwrócił odpowiedź 2xx."
 
@@ -120,10 +121,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
 
-    # (ZMODYFIKOWANE) Dodatkowe warunki na release:
-    #  - tylko push
-    #  - tylko gałąź main
-    #  - repozytorium nie jest forkiem (żeby nie wypychać obrazów z forków)
+    # tylko:
+    # - event: push
+    # - gałąź main
+    # - repozytorium nie jest forkiem
     if: >
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
@@ -148,8 +149,7 @@ jobs:
           context: ${{ env.WORKDIR }}
           push: true
           tags: |
-            # (NOWE) Tagowanie w oparciu o różne expressions
             ${{ env.HUB_IMAGE_BASE }}:latest
             ${{ env.HUB_IMAGE_BASE }}:${{ github.sha }}
-            ${{ env.HUB_IMAGE_BASE }}:${{ github.ref_name }}    # np. main
-            ${{ env.HUB_IMAGE_BASE }}:${{ env.DEPLOY_ENV }}     # prod/dev wg gałęzi
+            ${{ env.HUB_IMAGE_BASE }}:${{ github.ref_name }}
+            ${{ env.HUB_IMAGE_BASE }}:${{ env.DEPLOY_ENV }}
