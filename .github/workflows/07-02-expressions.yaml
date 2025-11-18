@@ -1,4 +1,4 @@
-name: 06-06b Pogoda API CI
+name: 07-02 Pogoda API CI
 
 on:
   push:
