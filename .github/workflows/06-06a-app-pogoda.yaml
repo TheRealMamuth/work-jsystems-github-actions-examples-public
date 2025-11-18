@@ -1,8 +1,8 @@
-name: "06-06 Pogoda API CI"
+name: 06-06 Pogoda API CI
 
 on:
   push:
-    branches: [ feature/06-pogoda-api ]
+    branches: [ feature/06-pogoda-api, main ]
   pull_request:
     branches: [ feature/06-pogoda-api ]
   workflow_dispatch:
@@ -12,16 +12,28 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      LOCAL_IMAGE_NAME: python_pogoda:test
       WORKDIR: ./CWICZENIA/06-context/pogoda_python_flusk
+      TEST_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda:test
+      HUB_IMAGE_BASE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker image (local test image)
-        run: |
-          docker build -t "$LOCAL_IMAGE_NAME" "$WORKDIR"
+      # --- Build lokalnego obrazu przy użyciu action ---
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build local test image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.WORKDIR }}
+          tags: ${{ env.TEST_IMAGE }}
+          load: true            # załaduj obraz do lokalnego dockera
+          push: false
+
+      # --- Testy API w kontenerze ---
 
       - name: Run container
         run: |
@@ -29,7 +41,7 @@ jobs:
             --name pogoda_api \
             -p 8000:8000 \
             -e OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}" \
-            "$LOCAL_IMAGE_NAME"
+            "${{ env.TEST_IMAGE }}"
 
       - name: Wait for API to be ready
         run: |
@@ -56,7 +68,7 @@ jobs:
           docker stop pogoda_api || true
           docker rm pogoda_api || true
 
-      # --- Poniższe kroki tylko dla push na main (nie dla PR) ---
+      # --- Build & push na Docker Hub tylko dla push na main ---
 
       - name: Log in to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -65,24 +77,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag image for Docker Hub
+      - name: Build & push image to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          HUB_IMAGE_BASE="${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda"
-
-          echo "Taguję obraz:"
-          echo " - $HUB_IMAGE_BASE:latest"
-          echo " - $HUB_IMAGE_BASE:$SHORT_SHA"
-
-          docker tag "$LOCAL_IMAGE_NAME" "$HUB_IMAGE_BASE:latest"
-          docker tag "$LOCAL_IMAGE_NAME" "$HUB_IMAGE_BASE:$SHORT_SHA"
-
-      - name: Push image to Docker Hub
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          HUB_IMAGE_BASE="${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda"
-
-          docker push "$HUB_IMAGE_BASE:latest"
-          docker push "$HUB_IMAGE_BASE:$SHORT_SHA"
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.WORKDIR }}
+          push: true
+          tags: |
+            ${{ env.HUB_IMAGE_BASE }}:latest
+            ${{ env.HUB_IMAGE_BASE }}:${{ github.sha }}
