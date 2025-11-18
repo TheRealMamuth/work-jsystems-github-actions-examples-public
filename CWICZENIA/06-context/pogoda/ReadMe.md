@@ -1,1 +1,2 @@
-python3 pogoda.py Warszawa TWÓJ_API_KEY
+bash ./start.sh "Warszawa" "KLUCZ" 
+CW06
