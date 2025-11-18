@@ -1,0 +1,107 @@
+name: 06-06b - CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+env:
+  IMAGE_NAME: my-app
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push)
+        run: |
+          docker build -t $IMAGE_NAME:ci .
+
+      - name: Save image as artifact
+        run: |
+          docker save $IMAGE_NAME:ci -o image.tar
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-image
+          path: image.tar
+
+  test:
+    name: Run container and tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-image
+          path: .
+
+      - name: Load image
+        run: |
+          docker load -i image.tar
+
+      - name: Run container
+        run: |
+          docker run -d --rm --name app-under-test -p 8080:8080 $IMAGE_NAME:ci
+
+      # tu wrzuć swoje testy – e2e, API, unit itp.
+      - name: Run tests
+        run: |
+          # przykładowo:
+          # npm test
+          # albo curl healthcheck / API
+          echo "Run your tests here"
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop app-under-test || true
+
+  build_and_push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    needs: test
+    # np. tylko z maina
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tags
+        id: meta
+        run: |
+          TAG_SHA=${GITHUB_SHA::7}
+          echo "sha_tag=$TAG_SHA" >> $GITHUB_OUTPUT
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_tag }}
