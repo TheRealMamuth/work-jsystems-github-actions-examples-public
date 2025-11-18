@@ -1,107 +1,125 @@
-name: 06-06b - CI
+name: 06-06b Pogoda API CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ feature/06-pogoda-api, main ]
   pull_request:
+    branches: [ feature/06-pogoda-api ]
+  workflow_dispatch:
 
 env:
-  IMAGE_NAME: my-app
-  REGISTRY: ghcr.io/${{ github.repository_owner }}
+  WORKDIR: ./CWICZENIA/06-context/pogoda_python_flusk
+  TEST_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda:test
+  HUB_IMAGE_BASE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda
 
 jobs:
+  # =====================
+  # 1. BUILD JOB
+  # =====================
   build:
-    name: Build image
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build image (no push)
-        run: |
-          docker build -t $IMAGE_NAME:ci .
+      - name: Build local test image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.WORKDIR }}
+          tags: ${{ env.TEST_IMAGE }}
+          load: true        # obraz załadowany do lokalnego dockera
+          push: false
 
-      - name: Save image as artifact
+      - name: Save image to tar
         run: |
-          docker save $IMAGE_NAME:ci -o image.tar
+          docker save "${{ env.TEST_IMAGE }}" -o image.tar
+
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-image
+          name: pogoda-image
           path: image.tar
 
+  # =====================
+  # 2. TEST JOB
+  # =====================
   test:
-    name: Run container and tests
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Download image artifact
         uses: actions/download-artifact@v4
         with:
-          name: app-image
-          path: .
+          name: pogoda-image
 
-      - name: Load image
+      - name: Load Docker image
         run: |
           docker load -i image.tar
 
       - name: Run container
         run: |
-          docker run -d --rm --name app-under-test -p 8080:8080 $IMAGE_NAME:ci
+          docker run -d \
+            --name pogoda_api \
+            -p 8000:8000 \
+            -e OPENWEATHER_API_KEY="${{ secrets.OPENWEATHER_API_KEY }}" \
+            "${{ env.TEST_IMAGE }}"
 
-      # tu wrzuć swoje testy – e2e, API, unit itp.
-      - name: Run tests
+      - name: Wait for API to be ready
         run: |
-          # przykładowo:
-          # npm test
-          # albo curl healthcheck / API
-          echo "Run your tests here"
+          echo "Czekam na start API..."
+          sleep 10
+
+      - name: Test /weather endpoint via curl
+        run: |
+          set -e
+          echo "Testowanie endpointu /weather..."
+          curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${{ secrets.OPENWEATHER_API_KEY }}"
+          echo
+          echo "OK - endpoint /weather zwrócił odpowiedź 2xx."
+
+      - name: Show container logs (for debug on failure)
+        if: failure()
+        run: |
+          echo "Logi kontenera:"
+          docker logs pogoda_api || true
 
       - name: Stop container
         if: always()
         run: |
-          docker stop app-under-test || true
+          docker stop pogoda_api || true
+          docker rm pogoda_api || true
 
-  build_and_push:
-    name: Build and push image
+  # =====================
+  # 3. BUILD & PUSH (RELEASE) JOB
+  # =====================
+  build-and-push:
     runs-on: ubuntu-latest
     needs: test
-    # np. tylko z maina
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set image tags
-        id: meta
-        run: |
-          TAG_SHA=${GITHUB_SHA::7}
-          echo "sha_tag=$TAG_SHA" >> $GITHUB_OUTPUT
-
-      - name: Build and push image
+      - name: Build & push image to Docker Hub
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ env.WORKDIR }}
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_tag }}
+            ${{ env.HUB_IMAGE_BASE }}:latest
+            ${{ env.HUB_IMAGE_BASE }}:${{ github.sha }}
