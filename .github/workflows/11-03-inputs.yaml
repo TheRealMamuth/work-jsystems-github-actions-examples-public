@@ -6,14 +6,39 @@ on:
   pull_request:
     branches: [ feature/07-pogoda-api ]
   workflow_dispatch:
+    inputs:
+      city:
+        description: "Miasto dla testu endpointu /weather"
+        required: false
+        default: "Warsaw"
+        type: string
+      run_tests:
+        description: "Czy uruchomić job TEST?"
+        required: false
+        default: true
+        type: boolean
+      run_deploy:
+        description: "Czy uruchomić job BUILD & PUSH (deploy)?"
+        required: false
+        default: false
+        type: boolean
+      deploy_env:
+        description: "Środowisko deployu (tylko dla workflow_dispatch)"
+        required: false
+        default: "dev07"
+        type: choice
+        options:
+          - dev07
+          - prod07
 
 env:
   WORKDIR: ./CWICZENIA/07-expressions/pogoda_python_flusk
   TEST_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda:test
   HUB_IMAGE_BASE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda
-  # środowisko w zależności od gałęzi"
-  #DEPLOY_ENV: "${{ github.ref == 'refs/heads/main' ? 'prod' : 'dev' }}"
-  DEPLOY_ENV: ${{ github.ref == 'refs/heads/main' && 'prod07' || 'dev07' }}
+  # DEPLOY_ENV:
+  # - przy workflow_dispatch – z inputu deploy_env
+  # - przy normalnych push/pr – prod07 dla main, dev07 dla reszty
+  DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_env || (github.ref == 'refs/heads/main' && 'prod07' || 'dev07') }}
 
 jobs:
   # =====================
@@ -56,13 +81,20 @@ jobs:
     # testy:
     # - zawsze na pull_request
     # - na push tylko jeśli commit NIE zawiera [skip tests]
+    # - na workflow_dispatch TYLKO gdy inputs.run_tests == true
     if: >
       github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip tests]'))
+      (github.event_name == 'push' &&
+       !contains(github.event.head_commit.message, '[skip tests]')) ||
+      (github.event_name == 'workflow_dispatch' &&
+       inputs.run_tests == true)
 
     env:
       # przerzucamy sekret do env – to możemy potem użyć w if:
       OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+      # Miasto zależne od inputu przy workflow_dispatch,
+      # a w innych eventach domyślnie "Warsaw"
+      TEST_CITY: ${{ github.event_name == 'workflow_dispatch' && inputs.city || 'Warsaw' }}
 
     steps:
       - name: Download image artifact
@@ -98,8 +130,8 @@ jobs:
         if: env.OPENWEATHER_API_KEY != ''
         run: |
           set -e
-          echo "Testowanie endpointu /weather..."
-          curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${{ env.OPENWEATHER_API_KEY }}"
+          echo "Testowanie endpointu /weather dla miasta: '${{ env.TEST_CITY }}'..."
+          curl -f "http://localhost:8000/weather?city=${{ env.TEST_CITY }}&api_key=${{ env.OPENWEATHER_API_KEY }}"
           echo
           echo "OK - endpoint /weather zwrócił odpowiedź 2xx."
 
@@ -123,13 +155,14 @@ jobs:
     needs: test
 
     # tylko:
-    # - event: push
-    # - gałąź main
-    # - repozytorium nie jest forkiem
+    # - event: push na main + nie-fork (standardowy "release")
+    # - ALBO workflow_dispatch z inputs.run_deploy == true
     if: >
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      github.event.repository.fork == false
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       github.event.repository.fork == false) ||
+      (github.event_name == 'workflow_dispatch' &&
+       inputs.run_deploy == true)
 
     steps:
       - name: Checkout repository
