@@ -2,7 +2,7 @@
 # about how to define and provide inputs to
 # workflows and custom actions.
 
-name: 11 - Working with Inputs
+name: 11-01 - Working with Inputs
 
 on:
   workflow_dispatch:

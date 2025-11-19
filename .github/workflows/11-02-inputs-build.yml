@@ -1,4 +1,4 @@
-name: 11-inputs - Build Nginx image
+name: 11-02-inputs - Build Nginx image
 
 on:
   workflow_dispatch:
