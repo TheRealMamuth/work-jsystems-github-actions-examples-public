@@ -1,0 +1,142 @@
+name: Zadanie 01 - Dodatkowe Rozwiązanie
+
+on:
+  push:
+    paths:
+      - 'DODATKOWE/zadanie01/**'
+
+jobs:
+  terraform:
+    name: Terraform & Ansible - ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.environment }}
+
+    # Matrix po środowiskach + sekwencyjne uruchamianie i fail-fast
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        include:
+          - environment: testing
+          - environment: development
+          - environment: staging
+          - environment: production
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./DODATKOWE/zadanie01
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.13
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform VALIDATE
+        id: validate
+        run: |
+          # Validate nie potrzebuje backendu - wiec wywolujemy init bez backendu
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform FMT
+        id: fmt
+        # Wykonuj dalej nawet jak ten krok bedzie bledny - to tylko formatowanie kodu.
+        continue-on-error: true
+        run: |
+          terraform fmt -check
+
+      - name: Terraform INIT
+        id: init
+        run: |
+          # Backend pochodzi z terraform cloud patrz plik backend.tf - wiec nie ma potrzeby podawania dodatkowych opcji tutaj
+          terraform init
+
+      - name: Terraform PLAN
+        id: plan
+        run: |
+          # Planowanie wraz z inicjalizacja wszystkich zmiennych.
+          terraform plan \
+            -var="region=${{ vars.REGION }}" \
+            -var="droplet_size=${{ vars.DROPLET_SIZE }}" \
+            -var="droplet_image=${{ vars.DROPLET_IMAGE }}" \
+            -var="name=${{ vars.NAME }}" \
+            -var="vpc_ip_range=${{ vars.VPC_IP_RANGE }}" \
+            -var="do_token=${{ secrets.DO_TOKEN }}" \
+            -out=tfplan
+
+      - name: Dodatkowy plan tf-summarize
+        run: |
+          terraform show -json tfplan > tfplan.json
+
+      # Akcja do instalacji dodatkowego dockera - oczywiscie jak na hoscie go mamy nie musimy robić tego kroku.
+      - name: Install Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Visualize Terraform plan
+        id: visualize
+        run: |
+          USER_ID=$(id -u)
+          GROUP_ID=$(id -g)
+
+          # summary in tree format
+          echo ""
+          echo "############################" 
+          echo "###  TREE FORMAT - PLAN  ###"
+          echo "############################" 
+          echo "" 
+          docker run --rm -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -tree tfplan.json 
+
+          # summary in table format
+          echo "### TABLE FORMAT - PLAN ###" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY 
+          docker run --user $USER_ID:$GROUP_ID --rm -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -md -out tfplan.md tfplan.json
+          docker run --user $USER_ID:$GROUP_ID --rm -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -html -out tfplan.html tfplan.json
+          cat tfplan.md >> $GITHUB_STEP_SUMMARY
+      
+          # summary in separate tree format
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "###############################" 
+          echo "###  TREE S FORMAT - PLAN   ###"
+          echo "###  TREE S FORMAT - PLAN   ###" >> $GITHUB_STEP_SUMMARY
+          echo "###############################"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          docker run --rm -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -separate-tree tfplan.json
+          docker run --rm -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -separate-tree tfplan.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Terraform APPLY
+        id: apply
+        run: |
+          terraform apply -auto-approve tfplan
+
+      - name: Ansible Testing - sprawdzenie czy nasz host działa
+        id: ansible
+        if: steps.apply.outcome == 'success'
+        run: |
+          # Czekamy chwile na uruchomienie sie dropleta
+          sleep 10
+          ansible --version
+          ansible -i ./inventories/dev/hosts.yaml all -m ping
+
+      - name: Terraform DESTROY
+        id: destroy
+        if: steps.apply.outcome == 'success'
+        run: |
+          # Plan destroy wraz z inicjalizacja wszystkich zmiennych.
+          terraform plan \
+            -var="region=${{ vars.REGION }}" \
+            -var="droplet_size=${{ vars.DROPLET_SIZE }}" \
+            -var="droplet_image=${{ vars.DROPLET_IMAGE }}" \
+            -var="name=${{ vars.NAME }}" \
+            -var="vpc_ip_range=${{ vars.VPC_IP_RANGE }}" \
+            -var="do_token=${{ secrets.DO_TOKEN }}" \
+            -destroy -out=tfplan
+          terraform apply -auto-approve tfplan

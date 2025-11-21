@@ -106,6 +106,8 @@ jobs:
           id: ansible
           if: steps.apply.outcome == 'success'
           run: |
+            # Czekamy chwile na uruchomienie sie dropleta
+            sleep 10
             ansible --version
             ansible -i ./inventories/dev/hosts.yaml all -m ping
 
