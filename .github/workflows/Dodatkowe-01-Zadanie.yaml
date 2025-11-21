@@ -19,7 +19,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./Dodatkowe/Zadanie-01
+        working-directory: ./Dodatkowe/zadanie-01
     steps:
         - name: Checkout repository
           uses: actions/checkout@v5
