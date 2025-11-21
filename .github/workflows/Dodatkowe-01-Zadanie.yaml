@@ -102,6 +102,12 @@ jobs:
           run: |
             terraform apply tfplan
 
+        - name: Ansible Testing - sprawdzenie czy nasz host dziala
+          id: ansible
+          run: |
+            ansible --version
+            ansible -i ./inventories/dev/hosts.yaml all -m ping
+
         - name: Terraform DESTROY
           id: destroy
           if: github.event.inputs.apply == 'true'
