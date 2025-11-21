@@ -6,6 +6,8 @@ name: 09 - Using Functions
 
 on:
   pull_request:
+    branches:
+      - CW09
   workflow_dispatch:
 
 jobs:

@@ -2,6 +2,8 @@ name: 20 - Workflow Security
 
 on:
   pull_request:
+    branches:
+      - CW20
 
 jobs:
   unsafe-pr:

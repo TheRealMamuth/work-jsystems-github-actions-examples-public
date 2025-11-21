@@ -4,8 +4,10 @@ name: 02 - Workflow Events v2
 on:
   #push:
   pull_request:
-  schedule:
-    - cron: "0 9 * * *"     # codziennie o 09:00 UTC
+    branches:
+      - CW02
+  #schedule:
+  #  - cron: "0 9 * * *"     # codziennie o 09:00 UTC
   workflow_dispatch:
 
 jobs:

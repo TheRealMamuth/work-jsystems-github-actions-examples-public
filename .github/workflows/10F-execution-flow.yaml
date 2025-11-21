@@ -3,13 +3,13 @@ name: 10F Example - Flow Control Demo
 on:
   push:
     branches:
-      - main
+      - CW10
       - release/*
     paths-ignore:
       - "docs/**"
   pull_request:
     branches:
-      - "**"
+      - "CW10"
   workflow_dispatch:
     inputs:
       force_deploy:

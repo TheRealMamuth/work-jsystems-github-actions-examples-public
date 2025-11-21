@@ -3,11 +3,11 @@ name: 05 - CI for "05-usung-filters-and-activity-types"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ CW05 ]
     paths-ignore:
       - '05-usung-filters-and-activity-types/dokumentacja/**'
   pull_request:
-    branches: [ main ]
+    branches: [ CW05 ]
     paths-ignore:
       - '05-usung-filters-and-activity-types/dokumentacja/**'
   # opcjonalnie: ręczne odpalenie

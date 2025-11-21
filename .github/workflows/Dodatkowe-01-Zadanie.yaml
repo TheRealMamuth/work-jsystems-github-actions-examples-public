@@ -2,7 +2,15 @@ name: Zadanie 01 - Dodatkowe Rozwiązanie
 
 on:
   workflow_dispatch:
-
+    inputs:
+      apply:
+        description: 'Czy zastosować zmiany (terraform apply)?'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 jobs:
   test_job:
     name: Testing Dodatkowe Zadanie 01 - Testowanie kodu czy dziala poprawnie

@@ -4,6 +4,7 @@ on:
   push:
     branches: [ cw13 ]
   pull_request:
+    branches: [ cw13 ]
   workflow_dispatch:
 
 defaults:
