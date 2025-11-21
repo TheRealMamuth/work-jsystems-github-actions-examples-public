@@ -18,12 +18,12 @@ resource "digitalocean_droplet" "vm" {
   monitoring    = true
   backups       = false
   droplet_agent = true
-  vpc_uuid = digitalocean_vpc.vm_vpc.id
+  vpc_uuid      = digitalocean_vpc.vm_vpc.id
 }
 
 resource "digitalocean_vpc" "vm_vpc" {
-  name   = "gha-vpc-${var.name}"
-  region = var.region
+  name     = "gha-vpc-${var.name}"
+  region   = var.region
   ip_range = var.vpc_ip_range
 }
 

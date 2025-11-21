@@ -1,10 +1,10 @@
-terraform { 
-  cloud { 
-    
-    organization = "jsystems_jenkins_examples" 
+terraform {
+  cloud {
 
-    workspaces { 
-      name = "gha_piotr_koska_example" 
-    } 
-  } 
+    organization = "jsystems_jenkins_examples"
+
+    workspaces {
+      name = "gha_piotr_koska_example"
+    }
+  }
 }

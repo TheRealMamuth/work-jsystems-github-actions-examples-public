@@ -9,10 +9,10 @@ variable "ansible_user" {
 }
 
 locals {
-  ansible_inventory_dir      = "${path.module}/inventories/dev"
-  ansible_host_name          = digitalocean_droplet.vm.name
-  ansible_host_vars_dir      = "${local.ansible_inventory_dir}/host_vars"
-  ansible_private_key_rel    = "./artefakty/id_ed25519"
+  ansible_inventory_dir   = "${path.module}/inventories/dev"
+  ansible_host_name       = digitalocean_droplet.vm.name
+  ansible_host_vars_dir   = "${local.ansible_inventory_dir}/host_vars"
+  ansible_private_key_rel = "./artefakty/id_ed25519"
 }
 
 ########################
