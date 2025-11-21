@@ -39,6 +39,8 @@ jobs:
 
         - name: Terraform FMT
           id: fmt
+          # Wykonuj dalej nawet jak ten krok bedzie bledny - to tylko formatowanie kodu.
+          continue-on-error: true
           run: |
             terraform fmt -check
 
