@@ -104,6 +104,7 @@ jobs:
 
         - name: Ansible Testing - sprawdzenie czy nasz host dziala
           id: ansible
+          if: steps.apply.outcome == 'success'
           run: |
             ansible --version
             ansible -i ./inventories/dev/hosts.yaml all -m ping
