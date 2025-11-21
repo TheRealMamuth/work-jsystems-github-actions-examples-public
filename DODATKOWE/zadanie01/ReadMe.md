@@ -6,14 +6,14 @@ Instalacji dokonaj recznie.
 
 ## Ad 2.
 Twoim kolejnym zadaniem bedzie przygotowanie w githubactions ENVIRONMENTS konfiguracji dla repozytorium. Strorz następujace Environments:
-- zadanie_development
-- zadanie_production
-- zadanie_testing
-- zadanie_staging
+- development
+- production
+- testing
+- staging
 
 ## Ad 3.
-Naszym zadaniem będzie konfiguracją EVNIRONMENT zadanie_testing
-Przygotuj odpowiednie VARIABLES środowiskowe w ENVIRONMENT zadanie_testing do podlaczenia sie za pomoca terraform do DigitalOcean:
+Naszym zadaniem będzie konfiguracją EVNIRONMENT testing
+Przygotuj odpowiednie VARIABLES środowiskowe w ENVIRONMENT testing do podlaczenia sie za pomoca terraform do DigitalOcean:
 
 1. region        = "nyc1"
 2. droplet_size  = "s-2vcpu-2gb"
@@ -21,7 +21,7 @@ Przygotuj odpowiednie VARIABLES środowiskowe w ENVIRONMENT zadanie_testing do p
 4. name          = "example-droplet"
 5. vpc_ip_range  = "10.99.1.0/24"
 
-Przygotuj secrets w ENVIRONMENT zadanie_testing:
+Przygotuj secrets w ENVIRONMENT testing:
 1. do_token - z Twojego konta DigitalOcean
 2. TF_API_TOKEN - z Twojego konta Terraform Cloud
 
