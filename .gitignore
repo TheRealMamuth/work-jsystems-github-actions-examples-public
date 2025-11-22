@@ -38,3 +38,6 @@ terraform.rc
 node_modules
 !.github/actions/**/node_modules
 venv/
+tfplan
+tfplan.json
+tfplan.*
