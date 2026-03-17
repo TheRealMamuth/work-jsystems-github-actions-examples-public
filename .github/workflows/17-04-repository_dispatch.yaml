@@ -10,9 +10,8 @@ jobs:
       - run: echo "Build repo A"
 
       - name: Trigger repo B
-        if: success()
         run: |
-          curl -X POST https://api.github.com/repos/TheRealMamuth/work-jsystems-github-actions-examples-public/dispatches \
+          curl -i -X POST https://api.github.com/repos/TheRealMamuth/work-jsystems-github-actions-examples-public/dispatches \
           -H "Accept: application/vnd.github+json" \
-          -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+          -H "Authorization: Bearer ${{ secrets.PAT_TOKEN }}" \
           -d '{"event_type":"run-from-repo-a"}'
