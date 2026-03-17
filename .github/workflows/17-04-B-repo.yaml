@@ -1,0 +1,11 @@
+name: Triggered from repo A
+
+on:
+  repository_dispatch:
+    types: [run-from-repo-a]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Workflow uruchomiony przez repo A"
