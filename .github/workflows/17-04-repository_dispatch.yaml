@@ -9,6 +9,9 @@ jobs:
     steps:
       - run: echo "Build repo A"
 
+      - name: Debug
+        run: echo "${{ secrets.PAT_TOKEN != '' }}"
+
       - name: Trigger repo B
         run: |
           curl -i -X POST https://api.github.com/repos/TheRealMamuth/work-jsystems-github-actions-examples-public/dispatches \
