@@ -8,4 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Workflow uruchomiony przez repo A"
+      - name: Show data
+        run: |
+          echo "Branch: ${{ github.event.client_payload.branch }}"
+          echo "Version: ${{ github.event.client_payload.version }}"
+          echo "Env: ${{ github.event.client_payload.env }}"
