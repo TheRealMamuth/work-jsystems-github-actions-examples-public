@@ -48,13 +48,13 @@ pipeline {
         stage('Test endpoint /weather') {
             steps {
                 withCredentials([string(credentialsId: 'OPENWEATHER_API_KEY', variable: 'API_KEY')]) {
-                    sh """
+                    sh '''
                         set -e
                         echo "Testowanie endpointu /weather..."
                         curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${API_KEY}"
                         echo
                         echo "OK - endpoint działa poprawnie."
-                    """
+                    '''
                 }
             }
         }
@@ -65,9 +65,9 @@ pipeline {
                     string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER'),
                     string(credentialsId: 'DOCKERHUB_TOKEN', variable: 'DOCKER_PASS')
                 ]) {
-                    sh """
+                    sh '''
                         echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                    """
+                    '''
                 }
             }
         }
@@ -79,7 +79,7 @@ pipeline {
                     env.SHORT_SHA = shortSha
                 }
                 withCredentials([string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER')]) {
-                    sh """
+                    sh '''
                         HUB_IMAGE_BASE="${DOCKER_USER}/python_pogoda"
 
                         echo "Taguję obraz:"
@@ -88,7 +88,7 @@ pipeline {
 
                         docker tag ${LOCAL_IMAGE_NAME} \$HUB_IMAGE_BASE:latest
                         docker tag ${LOCAL_IMAGE_NAME} \$HUB_IMAGE_BASE:${SHORT_SHA}
-                    """
+                    '''
                 }
             }
         }
@@ -96,12 +96,12 @@ pipeline {
         stage('Push image') {
             steps {
                 withCredentials([string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER')]) {
-                    sh """
+                    sh '''
                         HUB_IMAGE_BASE="${DOCKER_USER}/python_pogoda"
 
                         docker push \$HUB_IMAGE_BASE:latest
                         docker push \$HUB_IMAGE_BASE:${SHORT_SHA}
-                    """
+                    '''
                 }
             }
         }
