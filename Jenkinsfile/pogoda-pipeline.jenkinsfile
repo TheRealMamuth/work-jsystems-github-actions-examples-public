@@ -18,7 +18,8 @@ pipeline {
         stage('Check Weather') {
             steps {
                 sh '''
-                    chmod +x CWICZENIA/06-context/pogoda/start.sh
+                    ls -la
+                    chmod +x ./CWICZENIA/06-context/pogoda/start.sh
                     ./CWICZENIA/06-context/pogoda/start.sh ${CITY} ${API_KEY_W}
                 '''
             }
