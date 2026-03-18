@@ -59,10 +59,7 @@ pipeline {
             }
         }
 
-        stage('Docker Hub Login (only main)') {
-            when {
-                branch 'main'
-            }
+        stage('Docker Hub Login') {
             steps {
                 withCredentials([
                     string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER'),
@@ -75,10 +72,7 @@ pipeline {
             }
         }
 
-        stage('Tag image (only main)') {
-            when {
-                branch 'main'
-            }
+        stage('Tag image') {
             steps {
                 script {
                     def shortSha = env.GIT_COMMIT.take(7)
@@ -99,10 +93,7 @@ pipeline {
             }
         }
 
-        stage('Push image (only main)') {
-            when {
-                branch 'main'
-            }
+        stage('Push image') {
             steps {
                 withCredentials([string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER')]) {
                     sh """
