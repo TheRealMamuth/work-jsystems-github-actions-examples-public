@@ -109,21 +109,17 @@ pipeline {
 
     post {
         failure {
-            steps {
                 sh """
                     echo "Logi kontenera:"
                     docker logs pogoda_api || true
                 """
-            }
         }
 
         always {
-            steps {
                 sh """
                     docker stop pogoda_api || true
                     docker rm pogoda_api || true
                 """
-            }
         }
     }
 }
