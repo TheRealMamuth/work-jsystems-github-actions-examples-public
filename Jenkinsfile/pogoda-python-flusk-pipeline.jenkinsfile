@@ -16,22 +16,22 @@ pipeline {
 
         stage('Build Docker image') {
             steps {
-                sh """
-                    docker build -t ${LOCAL_IMAGE_NAME} ${WORKDIR}
-                """
+                sh '''
+                    docker build -t $LOCAL_IMAGE_NAME $WORKDIR
+                '''
             }
         }
 
         stage('Run container') {
             steps {
                 withCredentials([string(credentialsId: 'OPENWEATHER_API_KEY', variable: 'API_KEY')]) {
-                    sh """
+                    sh '''
                         docker run -d \
                           --name pogoda_api \
                           -p 8000:8000 \
-                          -e OPENWEATHER_API_KEY=${API_KEY} \
-                          ${LOCAL_IMAGE_NAME}
-                    """
+                          -e OPENWEATHER_API_KEY=$API_KEY \
+                          $LOCAL_IMAGE_NAME
+                    '''
                 }
             }
         }
@@ -51,7 +51,7 @@ pipeline {
                     sh '''
                         set -e
                         echo "Testowanie endpointu /weather..."
-                        curl -f "http://localhost:8000/weather?city=Warsaw&api_key=${API_KEY}"
+                        curl -f "http://localhost:8000/weather?city=Warsaw&api_key=$API_KEY"
                         echo
                         echo "OK - endpoint działa poprawnie."
                     '''
@@ -66,7 +66,7 @@ pipeline {
                     string(credentialsId: 'DOCKERHUB_TOKEN', variable: 'DOCKER_PASS')
                 ]) {
                     sh '''
-                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     '''
                 }
             }
@@ -80,14 +80,14 @@ pipeline {
                 }
                 withCredentials([string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER')]) {
                     sh '''
-                        HUB_IMAGE_BASE="${DOCKER_USER}/python_pogoda"
+                        HUB_IMAGE_BASE="$DOCKER_USER/python_pogoda"
 
                         echo "Taguję obraz:"
-                        echo " - \$HUB_IMAGE_BASE:latest"
-                        echo " - \$HUB_IMAGE_BASE:${SHORT_SHA}"
+                        echo " - $HUB_IMAGE_BASE:latest"
+                        echo " - $HUB_IMAGE_BASE:${SHORT_SHA}"
 
-                        docker tag ${LOCAL_IMAGE_NAME} \$HUB_IMAGE_BASE:latest
-                        docker tag ${LOCAL_IMAGE_NAME} \$HUB_IMAGE_BASE:${SHORT_SHA}
+                        docker tag ${LOCAL_IMAGE_NAME} $HUB_IMAGE_BASE:jenkinsfile
+                        docker tag ${LOCAL_IMAGE_NAME} $HUB_IMAGE_BASE:$SHORT_SHA
                     '''
                 }
             }
@@ -97,10 +97,10 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'DOCKERHUB_USERNAME', variable: 'DOCKER_USER')]) {
                     sh '''
-                        HUB_IMAGE_BASE="${DOCKER_USER}/python_pogoda"
+                        HUB_IMAGE_BASE="$DOCKER_USER/python_pogoda"
 
-                        docker push \$HUB_IMAGE_BASE:latest
-                        docker push \$HUB_IMAGE_BASE:${SHORT_SHA}
+                        docker push $HUB_IMAGE_BASE:jenkinsfile
+                        docker push $HUB_IMAGE_BASE:$SHORT_SHA
                     '''
                 }
             }
