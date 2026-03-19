@@ -12,10 +12,6 @@ concurrency:
   group: terraform-infra
   cancel-in-progress: false
 
-defaults:
-  run:
-    working-directory: TERRAFORM/03
-
 env:
   WORKDIR: ./CWICZENIA/06-context/pogoda_python_flusk
   TEST_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/python_pogoda:test
@@ -142,6 +138,9 @@ jobs:
 
   terrrform-destroy:
     name: Terraform Destroy
+    defaults:
+      run:
+        working-directory: TERRAFORM/03
     if: ${{ inputs.destroy == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -187,6 +186,9 @@ jobs:
 
   terraform-all-in-one:
     name: Terraform All-in-One
+    defaults:
+      run:
+        working-directory: TERRAFORM/03
     needs: build-and-push-app
     if: ${{ inputs.destroy != 'true' }}
     runs-on: ubuntu-latest
