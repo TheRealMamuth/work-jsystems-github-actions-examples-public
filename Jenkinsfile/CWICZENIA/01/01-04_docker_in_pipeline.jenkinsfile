@@ -38,7 +38,7 @@ pipeline {
                             set -euxo pipefail
                             docker --version
                             curl --version
-                        EOF
+                    EOF
                     '''
                 }
             }
@@ -55,7 +55,7 @@ pipeline {
                               --pull \
                               --tag "${IMAGE_NAME}:${TAG}" \
                           .
-                        EOF
+                    EOF
                     '''
                 }
             }
@@ -69,7 +69,7 @@ pipeline {
                         set -euxo pipefail
                         docker ps -a --format '{{.Names}}' | grep -q "^${IMAGE_NAME}$" && docker rm -f "${IMAGE_NAME}" || true
                         sudo fuser -k "${HOST_PORT}/tcp" || true
-                    EOF
+                EOF
                 '''
             }
         }
@@ -82,7 +82,7 @@ pipeline {
                         set -euxo pipefail
                         docker run -d --name "${IMAGE_NAME}" -p "${HOST_PORT}:${CONTAINER_PORT}" "${IMAGE_NAME}:${TAG}"
                         docker ps
-                    EOF
+                EOF
                 '''
             }
         }
@@ -109,7 +109,7 @@ pipeline {
                         HTTP_CODE=$(curl -s -o /tmp/index.html -w "%{http_code}" "${URL}")
                         echo "HTTP_CODE=${HTTP_CODE}"
                         test "${HTTP_CODE}" = "200"
-                    EOF
+                EOF
                 '''
             }
         }
@@ -130,7 +130,7 @@ pipeline {
 
                         grep -F "cw04 github actions" /tmp/index.html
                         curl -fsS -I "${URL}assets/wall.jpg" | grep -E "^HTTP/.* 200"
-                    EOF
+                EOF
                 '''
             }
         }
@@ -146,7 +146,7 @@ pipeline {
                         echo "---- docker logs ${IMAGE_NAME} ----"
                         docker logs "${IMAGE_NAME}" || true
                         echo "-----------------------------------"
-                    EOF
+                EOF
                 '''
 
                 sh '''
@@ -155,7 +155,7 @@ pipeline {
                         set -euxo pipefail
                         docker rm -f "${IMAGE_NAME}" || true
                         docker image rm "${IMAGE_NAME}:${TAG}" || true
-                    EOF
+                EOF
                 '''
             }
         }
