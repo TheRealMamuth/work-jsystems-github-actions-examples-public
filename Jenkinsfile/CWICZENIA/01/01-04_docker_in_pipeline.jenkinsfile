@@ -33,7 +33,7 @@ pipeline {
             steps {
                 dir("${WORKDIR}") {
                     sh '''
-                        bash <<'EOF'
+                        bash <<EOF
                             #!/usr/bin/env bash
                             set -euxo pipefail
                             docker --version
@@ -48,7 +48,7 @@ pipeline {
             steps {
                 dir("${WORKDIR}") {
                     sh '''
-                        bash <<'EOF'
+                        bash <<EOF
                             #!/usr/bin/env bash
                             set -euxo pipefail
                             docker build \
@@ -64,7 +64,7 @@ pipeline {
         stage('Pre-cleanup kontenera') {
             steps {
                 sh '''
-                    bash <<'EOF'
+                    bash <<EOF
                         #!/usr/bin/env bash
                         set -euxo pipefail
                         docker ps -a --format '{{.Names}}' | grep -q "^${IMAGE_NAME}$" && docker rm -f "${IMAGE_NAME}" || true
@@ -77,7 +77,7 @@ pipeline {
         stage('Run kontenera') {
             steps {
                 sh '''
-                    bash <<'EOF'
+                    bash <<EOF
                         #!/usr/bin/env bash
                         set -euxo pipefail
                         docker run -d --name "${IMAGE_NAME}" -p "${HOST_PORT}:${CONTAINER_PORT}" "${IMAGE_NAME}:${TAG}"
@@ -91,7 +91,7 @@ pipeline {
             steps {
                 sh '''
                     
-                    bash <<'EOF'
+                    bash <<EOF
                         #!/usr/bin/env bash
                         set -euxo pipefail
                         URL="http://localhost:${HOST_PORT}/"
@@ -117,7 +117,7 @@ pipeline {
         stage('Healthcheck HTTP 2') {
             steps {
                 sh '''
-                    bash <<'EOF'
+                    bash <<EOF
                         #!/usr/bin/env bash
 
                         set -euxo pipefail
@@ -140,7 +140,7 @@ pipeline {
         always {
             script {
                 sh '''
-                    bash <<'EOF'
+                    bash <<EOF
                         #!/usr/bin/env bash
                         set +e
                         echo "---- docker logs ${IMAGE_NAME} ----"
@@ -150,7 +150,7 @@ pipeline {
                 '''
 
                 sh '''
-                    bash <<'EOF'
+                    bash <<EOF
                         #!/usr/bin/env bash
                         set -euxo pipefail
                         docker rm -f "${IMAGE_NAME}" || true
