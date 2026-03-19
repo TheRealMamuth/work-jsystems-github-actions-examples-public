@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pogoda-image
-          path: image.tar
+          path: CWICZENIA/06-context/pogoda_python_flusk/image.tar
 
   # =====================
   # 2. TEST JOB
