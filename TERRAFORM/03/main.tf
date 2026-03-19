@@ -82,5 +82,12 @@ resource "local_file" "ansible_host_vars" {
   content = <<-EOT
     ansible_user: root
     ansible_host: ${digitalocean_droplet.main.ipv4_address}
+    ansible_ssh_private_key_file: ${path.module}/ssh_keys/id_ed25519
   EOT
+}
+
+resource "local_file" "ssh_private_key" {
+  filename = "${path.module}/ssh_keys/id_ed25519"
+  file_permission = "0600"
+  content = tls_private_key.main.private_key_pem
 }
