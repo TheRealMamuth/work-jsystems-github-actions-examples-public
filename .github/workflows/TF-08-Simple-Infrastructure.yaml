@@ -8,6 +8,10 @@ on:
         required: false
         default: 'false'
 
+concurrency:
+  group: terraform-infra
+  cancel-in-progress: false
+
 defaults:
   run:
     working-directory: TERRAFORM/02
