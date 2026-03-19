@@ -33,10 +33,12 @@ pipeline {
             steps {
                 dir("${WORKDIR}") {
                     sh '''
-                        #!/usr/bin/env bash
-                        set -euxo pipefail
-                        docker --version
-                        curl --version
+                        bash -c "
+                            #!/usr/bin/env bash
+                            set -euxo pipefail
+                            docker --version
+                            curl --version
+                        "
                     '''
                 }
             }
@@ -128,11 +130,13 @@ pipeline {
         always {
             script {
                 sh '''
-                    #!/usr/bin/env bash
-                    set +e
-                    echo "---- docker logs ${IMAGE_NAME} ----"
-                    docker logs "${IMAGE_NAME}" || true
-                    echo "-----------------------------------"
+                    bash -c "
+                        #!/usr/bin/env bash
+                        set +e
+                        echo "---- docker logs ${IMAGE_NAME} ----"
+                        docker logs "${IMAGE_NAME}" || true
+                        echo "-----------------------------------"
+                    "
                 '''
 
                 sh '''
