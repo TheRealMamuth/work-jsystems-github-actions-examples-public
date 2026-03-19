@@ -1,4 +1,4 @@
-name: TF 09 - Simple Terraform Cloud Infrastructure
+name: TF 20 - Simple Terraform Cloud Infrastructure
 
 on:
   workflow_dispatch:
