@@ -1,4 +1,4 @@
-name: TF 01 - Simple Terraform Cloud Infrastructure
+name: TF 02 - Simple Terraform Cloud Infrastructure
 
 on:
   workflow_dispatch:
