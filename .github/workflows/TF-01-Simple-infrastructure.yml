@@ -2,6 +2,11 @@ name: Simple Terraform Cloud Infrastructure
 
 on:
   workflow_dispatch:
+    inputs:
+      destroy:
+        description: 'Destroy infrastructure after creation'
+        required: false
+        default: 'false'
 
 defaults:
   run:
@@ -33,4 +38,8 @@ jobs:
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply tfplan
+
+      - name: Terraform Destroy
+        if: ${{ inputs.destroy == 'true' }}
+        run: terraform destroy -auto-approve
