@@ -25,6 +25,13 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_CLOUD_CREDENTIALS }}
 
+      - name: Write tfvars from secret
+        shell: bash
+        run: |
+          cat <<EOF > terraform.auto.tfvars
+          ${{ secrets.AUTO_TF_VARS }}
+          EOF
+
       - name: Terraform Init
         run: terraform init
 
