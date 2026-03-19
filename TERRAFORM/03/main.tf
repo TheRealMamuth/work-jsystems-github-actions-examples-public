@@ -89,5 +89,5 @@ resource "local_file" "ansible_host_vars" {
 resource "local_file" "ssh_private_key" {
   filename = "${path.module}/ssh_keys/id_ed25519"
   file_permission = "0600"
-  content = tls_private_key.main.private_key_pem
+  content = tls_private_key.main.openssh_private_key
 }
