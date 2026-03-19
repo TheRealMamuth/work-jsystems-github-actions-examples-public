@@ -125,5 +125,10 @@ jobs:
       - name: Terraform Apply
         run: terraform apply tfplan
 
+      - name: Terraform Output
+        id: output
+        run: |
+          terraform output
+
       - name: Run Ansible playbook
         run: ansible-playbook -i inventories/hosts.yaml install-nginx.yaml --limit piotr-koska-github-actions-droplet
