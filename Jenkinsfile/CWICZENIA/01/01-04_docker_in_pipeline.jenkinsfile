@@ -33,6 +33,7 @@ pipeline {
             steps {
                 dir("${WORKDIR}") {
                     sh '''
+                        #!/usr/bin/env bash
                         set -euxo pipefail
                         docker --version
                         curl --version
@@ -45,6 +46,7 @@ pipeline {
             steps {
                 dir("${WORKDIR}") {
                     sh '''
+                        #!/usr/bin/env bash
                         set -euxo pipefail
                         docker build \
                           --pull \
@@ -58,6 +60,7 @@ pipeline {
         stage('Pre-cleanup kontenera') {
             steps {
                 sh '''
+                    #!/usr/bin/env bash
                     set -euxo pipefail
                     docker ps -a --format '{{.Names}}' | grep -q "^${IMAGE_NAME}$" && docker rm -f "${IMAGE_NAME}" || true
                     sudo fuser -k "${HOST_PORT}/tcp" || true
@@ -68,6 +71,7 @@ pipeline {
         stage('Run kontenera') {
             steps {
                 sh '''
+                    #!/usr/bin/env bash
                     set -euxo pipefail
                     docker run -d --name "${IMAGE_NAME}" -p "${HOST_PORT}:${CONTAINER_PORT}" "${IMAGE_NAME}:${TAG}"
                     docker ps
@@ -78,6 +82,8 @@ pipeline {
         stage('Healthcheck HTTP') {
             steps {
                 sh '''
+                    #!/usr/bin/env bash
+
                     set -euxo pipefail
                     URL="http://localhost:${HOST_PORT}/"
                     echo "Sprawdzam ${URL}"
@@ -101,6 +107,8 @@ pipeline {
         stage('Healthcheck HTTP 2') {
             steps {
                 sh '''
+                    #!/usr/bin/env bash
+
                     set -euxo pipefail
                     URL="http://localhost:${HOST_PORT}/"
 
@@ -120,6 +128,7 @@ pipeline {
         always {
             script {
                 sh '''
+                    #!/usr/bin/env bash
                     set +e
                     echo "---- docker logs ${IMAGE_NAME} ----"
                     docker logs "${IMAGE_NAME}" || true
@@ -127,6 +136,7 @@ pipeline {
                 '''
 
                 sh '''
+                    #!/usr/bin/env bash
                     set -euxo pipefail
                     docker rm -f "${IMAGE_NAME}" || true
                     docker image rm "${IMAGE_NAME}:${TAG}" || true
