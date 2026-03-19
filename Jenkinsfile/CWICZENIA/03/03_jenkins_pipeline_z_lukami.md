@@ -1,11 +1,11 @@
-# 🧪 Zadanie: Jenkins Pipeline (wersja z lukami)
+#  Zadanie: Jenkins Pipeline (wersja z lukami)
 
 Uzupełnij poniższy Jenkinsfile, wpisując brakujące elementy w miejscach
 oznaczonych `___`.
 
 ------------------------------------------------------------------------
 
-## 🧩 Jenkinsfile
+##  Jenkinsfile
 
     pipeline {
         agent ___
@@ -118,7 +118,7 @@ oznaczonych `___`.
 
 ------------------------------------------------------------------------
 
-## 📝 Wskazówki
+##  Wskazówki
 
 -   `agent any` -- najczęściej używane
 -   `checkout scm` -- pobranie repozytorium
