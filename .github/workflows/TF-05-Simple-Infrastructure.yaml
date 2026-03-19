@@ -1,4 +1,4 @@
-name: TF 03 - Simple Terraform Cloud Infrastructure
+name: TF 05 - Simple Terraform Cloud Infrastructure
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ defaults:
 jobs:
   terrrform-destroy:
     name: Terraform Destroy
-    if : ${{ inputs.destroy == 'true' }}
+    if: ${{ inputs.destroy == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,12 +37,11 @@ jobs:
         run: terraform init
 
       - name: Terraform Destroy
-        if: ${{ inputs.destroy == 'true' }}
         run: terraform destroy -auto-approve
 
   terraform-all-in-one:
     name: Terraform All-in-One
-    if : ${{ inputs.destroy != 'true' }}
+    if: ${{ inputs.destroy != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -81,23 +80,15 @@ jobs:
         run: |
           terraform show -json tfplan > tfplan.json
 
-      - name: Visualize Terraform plan
+      - name: Visualize Terraform plan (HTML)
         id: visualize
         run: |
-          echo ""
-          echo "############################"
-          echo "###  TREE FORMAT - PLAN  ###"
-          echo "############################"
-          echo ""
-          docker run -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -tree tfplan.json
+          docker run -v $PWD:/workspace -w /workspace \
+            ghcr.io/dineshba/tf-summarize \
+            -html -out report.html tfplan.json
 
-          # summary in separate tree format
-          echo ""
-          echo "###############################"
-          echo "###  TREE S FORMAT - PLAN   ###"
-          echo "###############################"
-          echo ""
-          docker run -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -separate-tree tfplan.json
+          echo "<h2>Terraform Plan</h2>" >> $GITHUB_STEP_SUMMARY
+          cat report.html >> $GITHUB_STEP_SUMMARY
 
       - name: Terraform Apply
         run: terraform apply tfplan

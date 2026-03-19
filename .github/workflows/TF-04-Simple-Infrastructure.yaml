@@ -1,4 +1,4 @@
-name: TF 03 - Simple Terraform Cloud Infrastructure
+name: TF 04 - Simple Terraform Cloud Infrastructure
 
 on:
   workflow_dispatch:
@@ -84,20 +84,17 @@ jobs:
       - name: Visualize Terraform plan
         id: visualize
         run: |
-          echo ""
-          echo "############################"
-          echo "###  TREE FORMAT - PLAN  ###"
-          echo "############################"
-          echo ""
-          docker run -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -tree tfplan.json
+            echo "<h2>Terraform Plan</h2>" >> $GITHUB_STEP_SUMMARY
 
-          # summary in separate tree format
-          echo ""
-          echo "###############################"
-          echo "###  TREE S FORMAT - PLAN   ###"
-          echo "###############################"
-          echo ""
-          docker run -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -separate-tree tfplan.json
+            echo "<h3>TREE FORMAT - PLAN</h3>" >> $GITHUB_STEP_SUMMARY
+            echo "<pre>" >> $GITHUB_STEP_SUMMARY
+            docker run -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -tree tfplan.json >> $GITHUB_STEP_SUMMARY
+            echo "</pre>" >> $GITHUB_STEP_SUMMARY
+
+            echo "<h3>TREE S FORMAT - PLAN</h3>" >> $GITHUB_STEP_SUMMARY
+            echo "<pre>" >> $GITHUB_STEP_SUMMARY
+            docker run -v $PWD:/workspace -w /workspace ghcr.io/dineshba/tf-summarize -separate-tree tfplan.json >> $GITHUB_STEP_SUMMARY
+            echo "</pre>" >> $GITHUB_STEP_SUMMARY
 
       - name: Terraform Apply
         run: terraform apply tfplan
