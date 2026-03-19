@@ -14,7 +14,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: TERRAFORM/02
+    working-directory: TERRAFORM/03
 
 jobs:
   terrrform-destroy:
@@ -120,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: terraform-plan-report
-          path: TERRAFORM/02/report.html
+          path: TERRAFORM/03/report.html
 
 
       - name: Terraform Apply
