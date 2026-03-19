@@ -256,10 +256,10 @@ jobs:
         run: |
           terraform output
 
-      - name: Run Ansible playbook
+      - name: Run Ansible playbook - install nginx
         run: ansible-playbook -i inventories/hosts.yaml install-nginx.yaml --limit piotr-koska-github-actions-droplet
 
-      - name: Run Ansible playbook
+      - name: Run Ansible playbook - deploy app
         run: |
           ansible-galaxy collection install community.docker
 

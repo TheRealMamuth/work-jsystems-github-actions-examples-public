@@ -4,7 +4,8 @@ resource "digitalocean_droplet" "main" {
   size   = "s-1vcpu-1gb"
   image  = "ubuntu-24-04-x64"
   ssh_keys = [
-    digitalocean_ssh_key.main.id
+    digitalocean_ssh_key.main.id,
+    digitalocean_ssh_key.own.id
   ]
 }
 
@@ -35,6 +36,12 @@ resource "tls_private_key" "main" {
 resource "digitalocean_ssh_key" "main" {
   name       = "piotr-koska-github-actions-ssh-key"
   public_key = tls_private_key.main.public_key_openssh
+}
+
+resource "digitalocean_ssh_key" "own" {
+  name       = "piotr-koska-github-actions-own-ssh-key"
+  public_key = var.own_ssh_public_key
+  
 }
 
 resource "digitalocean_firewall" "main" {
