@@ -122,6 +122,8 @@ jobs:
           name: terraform-plan-report
           path: TERRAFORM/03/report.html
 
-
       - name: Terraform Apply
         run: terraform apply tfplan
+
+      - name: Run Ansible playbook
+        run: ansible-playbook -i inventories/hosts install-nginx.yml --limit piotr-koska-github-actions-droplet

@@ -67,7 +67,7 @@ resource "digitalocean_firewall" "main" {
 }
 
 resource "local_file" "ansible_inventory" {
-  filename = "${path.module}/inventories/hosts"
+  filename = "${path.module}/inventories/hosts.yaml"
 
   content = <<-EOT
     digitalocean:
@@ -76,8 +76,8 @@ resource "local_file" "ansible_inventory" {
   EOT
 }
 
-resource "local_file" "anssible_host_vars" {
-  filename = "${path.module}/host_vars/${digitalocean_droplet.main.name}.yml"
+resource "local_file" "ansible_host_vars" {
+  filename = "${path.module}/host_vars/${digitalocean_droplet.main.name}.yaml"
 
   content = <<-EOT
     ansible_user: root
