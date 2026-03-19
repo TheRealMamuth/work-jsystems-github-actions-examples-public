@@ -3,6 +3,10 @@ name: Simple Terraform Cloud Infrastructure
 on:
   workflow_dispatch:
 
+defaults:
+  run:
+    working-directory: TERRAFORM/01
+
 jobs:
   terraform-all-in-one:
     name: Terraform All-in-One
