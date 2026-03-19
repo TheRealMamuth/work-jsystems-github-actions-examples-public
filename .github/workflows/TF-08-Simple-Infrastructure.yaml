@@ -116,7 +116,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: terraform-plan-report
-          path: report.html
+          path: TERRAFORM/02/report.html
 
 
       - name: Terraform Apply
