@@ -17,7 +17,7 @@ resource "digitalocean_project" "main" {
   lifecycle {
     precondition {
       # environment tylko Development, Production lub Staging
-      condition     = contains(["Development", "Production", "Staging"], self.environment)
+      condition     = contains(["Development", "Production", "Staging"], digitalocean_project.main.environment)
       error_message = "Dozwolone wartosci environment to: Development, Production, Staging."  
     }
   }
