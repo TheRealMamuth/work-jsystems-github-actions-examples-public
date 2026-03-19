@@ -13,14 +13,6 @@ resource "digitalocean_project" "main" {
   description = "Project for GitHub Actions examples"
   purpose     = "Testing and learning"
   environment = "Development"
-
-  lifecycle {
-    precondition {
-      # environment tylko Development, Production lub Staging
-      condition     = contains(["Development", "Production", "Staging"], digitalocean_project.main.environment)
-      error_message = "Dozwolone wartosci environment to: Development, Production, Staging."  
-    }
-  }
 }
 
 resource "digitalocean_project_resources" "main" {
