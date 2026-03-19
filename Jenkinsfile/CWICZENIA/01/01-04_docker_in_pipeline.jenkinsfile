@@ -48,12 +48,14 @@ pipeline {
             steps {
                 dir("${WORKDIR}") {
                     sh '''
-                        #!/usr/bin/env bash
-                        set -euxo pipefail
-                        docker build \
-                          --pull \
-                          --tag "${IMAGE_NAME}:${TAG}" \
+                        bash -c "
+                            #!/usr/bin/env bash
+                            set -euxo pipefail
+                            docker build \
+                              --pull \
+                              --tag "${IMAGE_NAME}:${TAG}" \
                           .
+                        "
                     '''
                 }
             }
@@ -62,10 +64,12 @@ pipeline {
         stage('Pre-cleanup kontenera') {
             steps {
                 sh '''
-                    #!/usr/bin/env bash
-                    set -euxo pipefail
-                    docker ps -a --format '{{.Names}}' | grep -q "^${IMAGE_NAME}$" && docker rm -f "${IMAGE_NAME}" || true
-                    sudo fuser -k "${HOST_PORT}/tcp" || true
+                    bash -c "
+                        #!/usr/bin/env bash
+                        set -euxo pipefail
+                        docker ps -a --format '{{.Names}}' | grep -q "^${IMAGE_NAME}$" && docker rm -f "${IMAGE_NAME}" || true
+                        sudo fuser -k "${HOST_PORT}/tcp" || true
+                    "
                 '''
             }
         }
@@ -73,10 +77,12 @@ pipeline {
         stage('Run kontenera') {
             steps {
                 sh '''
-                    #!/usr/bin/env bash
-                    set -euxo pipefail
-                    docker run -d --name "${IMAGE_NAME}" -p "${HOST_PORT}:${CONTAINER_PORT}" "${IMAGE_NAME}:${TAG}"
-                    docker ps
+                    bash -c "
+                        #!/usr/bin/env bash
+                        set -euxo pipefail
+                        docker run -d --name "${IMAGE_NAME}" -p "${HOST_PORT}:${CONTAINER_PORT}" "${IMAGE_NAME}:${TAG}"
+                        docker ps
+                    "
                 '''
             }
         }
@@ -84,24 +90,26 @@ pipeline {
         stage('Healthcheck HTTP') {
             steps {
                 sh '''
-                    #!/usr/bin/env bash
+                    
+                    bash -c "
+                        #!/usr/bin/env bash
+                        set -euxo pipefail
+                        URL="http://localhost:${HOST_PORT}/"
+                        echo "Sprawdzam ${URL}"
 
-                    set -euxo pipefail
-                    URL="http://localhost:${HOST_PORT}/"
-                    echo "Sprawdzam ${URL}"
+                        for i in $(seq 1 30); do
+                        if curl -fsS -o /dev/null "${URL}"; then
+                            echo "Serwis jest osiągalny."
+                            break
+                        fi
+                        echo "Brak odpowiedzi, próba $i/30..."
+                        sleep 1
+                        done
 
-                    for i in $(seq 1 30); do
-                      if curl -fsS -o /dev/null "${URL}"; then
-                        echo "Serwis jest osiągalny."
-                        break
-                      fi
-                      echo "Brak odpowiedzi, próba $i/30..."
-                      sleep 1
-                    done
-
-                    HTTP_CODE=$(curl -s -o /tmp/index.html -w "%{http_code}" "${URL}")
-                    echo "HTTP_CODE=${HTTP_CODE}"
-                    test "${HTTP_CODE}" = "200"
+                        HTTP_CODE=$(curl -s -o /tmp/index.html -w "%{http_code}" "${URL}")
+                        echo "HTTP_CODE=${HTTP_CODE}"
+                        test "${HTTP_CODE}" = "200"
+                    "
                 '''
             }
         }
@@ -109,18 +117,20 @@ pipeline {
         stage('Healthcheck HTTP 2') {
             steps {
                 sh '''
-                    #!/usr/bin/env bash
+                    bash -c "
+                        #!/usr/bin/env bash
 
-                    set -euxo pipefail
-                    URL="http://localhost:${HOST_PORT}/"
+                        set -euxo pipefail
+                        URL="http://localhost:${HOST_PORT}/"
 
-                    for i in $(seq 1 30); do
-                      curl -fsS -o /tmp/index.html "${URL}" && break || true
-                      sleep 1
-                    done
+                        for i in $(seq 1 30); do
+                        curl -fsS -o /tmp/index.html "${URL}" && break || true
+                        sleep 1
+                        done
 
-                    grep -F "cw04 github actions" /tmp/index.html
-                    curl -fsS -I "${URL}assets/wall.jpg" | grep -E "^HTTP/.* 200"
+                        grep -F "cw04 github actions" /tmp/index.html
+                        curl -fsS -I "${URL}assets/wall.jpg" | grep -E "^HTTP/.* 200"
+                    "
                 '''
             }
         }
@@ -140,10 +150,12 @@ pipeline {
                 '''
 
                 sh '''
-                    #!/usr/bin/env bash
-                    set -euxo pipefail
-                    docker rm -f "${IMAGE_NAME}" || true
-                    docker image rm "${IMAGE_NAME}:${TAG}" || true
+                    bash -c "
+                        #!/usr/bin/env bash
+                        set -euxo pipefail
+                        docker rm -f "${IMAGE_NAME}" || true
+                        docker image rm "${IMAGE_NAME}:${TAG}" || true
+                    "
                 '''
             }
         }
