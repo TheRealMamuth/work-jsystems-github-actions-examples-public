@@ -145,7 +145,6 @@ jobs:
 
   terrrform-destroy:
     name: Terraform Destroy
-    needs: build-and-push-app
     if: ${{ inputs.destroy == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -191,6 +190,7 @@ jobs:
 
   terraform-all-in-one:
     name: Terraform All-in-One
+    needs: build-and-push-app
     if: ${{ inputs.destroy != 'true' }}
     runs-on: ubuntu-latest
     steps:
