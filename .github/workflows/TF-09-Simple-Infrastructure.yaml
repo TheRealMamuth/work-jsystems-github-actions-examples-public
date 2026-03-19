@@ -126,4 +126,4 @@ jobs:
         run: terraform apply tfplan
 
       - name: Run Ansible playbook
-        run: ansible-playbook -i inventories/hosts install-nginx.yml --limit piotr-koska-github-actions-droplet
+        run: ansible-playbook -i inventories/hosts.yaml install-nginx.yaml --limit piotr-koska-github-actions-droplet
