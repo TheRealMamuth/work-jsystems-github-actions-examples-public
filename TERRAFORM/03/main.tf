@@ -65,3 +65,22 @@ resource "digitalocean_firewall" "main" {
     destination_addresses = ["0.0.0.0/0"]
   }
 }
+
+resource "local_file" "ansible_inventory" {
+  filename = "${path.module}/inventories/hosts"
+
+  content = <<-EOT
+    digitalocean:
+      hosts:
+        ${digitalocean_droplet.main.name}:
+  EOT
+}
+
+resource "local_file" "anssible_host_vars" {
+  filename = "${path.module}/host_vars/${digitalocean_droplet.main.name}.yml"
+
+  content = <<-EOT
+    ansible_user: root
+    ansible_host: ${digitalocean_droplet.main.ipv4_address}
+  EOT
+}
