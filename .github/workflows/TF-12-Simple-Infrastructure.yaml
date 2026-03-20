@@ -36,7 +36,9 @@ jobs:
       matrix:
         include:
           - environment: tf-dev
+            srodowisko: Development
           - environment: tf-stag
+            srodowisko: Staging
 
     steps:
       - name: Checkout repository
@@ -90,7 +92,9 @@ jobs:
       matrix:
         include:
           - environment: tf-dev
+            srodowisko: Development
           - environment: tf-stag
+            srodowisko: Staging
 
     steps:
       - name: Download image artifact
@@ -151,7 +155,9 @@ jobs:
       matrix:
         include:
           - environment: tf-dev
+            srodowisko: Development
           - environment: tf-stag
+            srodowisko: Staging
 
     defaults:
       run:
@@ -204,7 +210,9 @@ jobs:
       matrix:
         include:
           - environment: tf-dev
+            srodowisko: Development
           - environment: tf-stag
+            srodowisko: Staging
 
     defaults:
       run:
@@ -281,7 +289,9 @@ jobs:
       matrix:
         include:
           - environment: tf-dev
+            srodowisko: Development
           - environment: tf-stag
+            srodowisko: Staging
 
     defaults:
       run:
@@ -400,6 +410,8 @@ jobs:
       matrix:
         include:
           - environment: tf-prod
+            srodowisko: Production
+            
 
     steps:
       - name: Checkout repository
@@ -454,6 +466,7 @@ jobs:
       matrix:
         include:
           - environment: tf-prod
+            srodowisko: Production
 
     steps:
       - name: Download image artifact
@@ -515,6 +528,8 @@ jobs:
       matrix:
         include:
           - environment: tf-prod
+            srodowisko: Production
+
     defaults:
       run:
         working-directory: ${{ env.WORKDIR }}
@@ -566,6 +581,8 @@ jobs:
       matrix:
         include:
           - environment: tf-prod
+            srodowisko: Production
+
     defaults:
       run:
         working-directory: TERRAFORM/04
@@ -641,6 +658,8 @@ jobs:
       matrix:
         include:
           - environment: tf-prod
+            srodowisko: Production
+            
     defaults:
       run:
         working-directory: TERRAFORM/04
@@ -729,15 +748,15 @@ jobs:
           sleep 20
 
       - name: Run Ansible playbook - install nginx
-        run: ansible-playbook -i inventories/${{ matrix.environment }}/hosts.yaml install-nginx.yaml --limit ${{ vars.DROPLET_NAME }}
+        run: ansible-playbook -i inventories/${{ matrix.srodowisko }}/hosts.yaml install-nginx.yaml --limit ${{ vars.DROPLET_NAME }}
 
       - name: Run Ansible playbook - deploy app
         run: |
           ansible-galaxy collection install community.docker
 
           ansible-playbook \
-            -i inventories/${{ matrix.environment }}/hosts.yaml \
+            -i inventories/${{ matrix.srodowisko }}/hosts.yaml \
             deploy-app.yml \
             --limit ${{ vars.DROPLET_NAME }} \
-            -e "docker_image=${{ env.HUB_IMAGE_BASE }}:ansible-${{ matrix.environment }}" \
+            -e "docker_image=${{ env.HUB_IMAGE_BASE }}:ansible-${{ matrix.srodowisko }}" \
             -e "openweather_api_key=${{ secrets.OPENWEATHER_API_KEY }}"
