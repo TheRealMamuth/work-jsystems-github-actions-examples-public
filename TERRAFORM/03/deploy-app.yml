@@ -27,7 +27,21 @@
         state: present
 
     # -------------------------
-    # DOCKER (POPRAWNIE 2026)
+    # CLEANUP (ważne!)
+    # -------------------------
+
+    - name: Usuń stary klucz Dockera jeśli istnieje
+      file:
+        path: /etc/apt/keyrings/docker.gpg
+        state: absent
+
+    - name: Usuń stare repo Dockera jeśli istnieje
+      file:
+        path: /etc/apt/sources.list.d/docker.list
+        state: absent
+
+    # -------------------------
+    # DOCKER REPO (FIX 2026)
     # -------------------------
 
     - name: Utwórz katalog keyrings
@@ -36,10 +50,14 @@
         state: directory
         mode: '0755'
 
-    - name: Dodaj klucz Dockera (dearmor + poprawny fingerprint)
-      shell: |
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-        gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    - name: Pobierz klucz Dockera
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /tmp/docker.gpg
+        mode: '0644'
+
+    - name: Konwertuj klucz do formatu binarnego (dearmor)
+      command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg
       args:
         creates: /etc/apt/keyrings/docker.gpg
 
@@ -48,17 +66,13 @@
         path: /etc/apt/keyrings/docker.gpg
         mode: '0644'
 
-    - name: Dodaj repozytorium Dockera (noble fix)
-      apt_repository:
-        repo: >
-          deb [arch={{ ansible_facts['architecture'] }}
-          signed-by=/etc/apt/keyrings/docker.gpg]
-          https://download.docker.com/linux/ubuntu
-          {{ ansible_facts['distribution_release'] }} stable
-        state: present
-        filename: docker
+    - name: Dodaj repo Dockera
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch={{ ansible_facts['architecture'] }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
 
-    - name: Update apt cache po repo
+    - name: Update apt cache po dodaniu repo
       apt:
         update_cache: yes
 
