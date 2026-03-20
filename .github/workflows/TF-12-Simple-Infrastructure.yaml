@@ -358,7 +358,7 @@ jobs:
       - name: Copy artefacts html
         uses: actions/upload-artifact@v7
         with:
-          name: terraform-plan-report
+          name: terraform-plan-report-${{ matrix.environment }}
           path: TERRAFORM/04/report.html
 
       - name: Terraform Apply
