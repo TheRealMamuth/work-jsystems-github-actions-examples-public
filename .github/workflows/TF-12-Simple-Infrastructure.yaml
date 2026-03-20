@@ -385,6 +385,7 @@ jobs:
             -e "openweather_api_key=${{ secrets.OPENWEATHER_API_KEY }}"
 
   build-app-prod:
+    name: Build App ${{ matrix.environment }}
     needs: [build-app, test-app, build-and-push-app, terraform-all-in-one]
     runs-on: ubuntu-latest
     if: ${{ inputs.destroy != 'true' }}
@@ -442,6 +443,7 @@ jobs:
   # =====================
   test-app-prod:
     runs-on: ubuntu-latest
+    name: Test App ${{ matrix.environment }}  
     needs: build-app-prod
     if: ${{ inputs.destroy != 'true' }}
     # Matrix po środowiskach + sekwencyjne uruchamianie i fail-fast
@@ -501,6 +503,7 @@ jobs:
   # =====================
   build-and-push-app-prod:
     runs-on: ubuntu-latest
+    name: Build & Push App ${{ matrix.environment }}
     needs: test-app-prod
     #if: github.event_name == 'push' && github.ref == 'refs/heads/main' && inputs.destroy != 'true'
     if: ${{ inputs.destroy != 'true' }}
@@ -554,7 +557,7 @@ jobs:
   # 4. TERRAFORM DESTROY
   # =====================
   terrrform-destroy-prod:
-    name: Terraform Destroy
+    name: Terraform Destroy ${{ matrix.environment }}
     # Matrix po środowiskach + sekwencyjne uruchamianie i fail-fast
     environment: ${{ matrix.environment }}
     strategy:
@@ -629,7 +632,7 @@ jobs:
   # 5. TERRAFORM APPLY
   # =====================
   terraform-all-in-one-prod:
-    name: Terraform All-in-One
+    name: Terraform All-in-One ${{ matrix.environment }}
     # Matrix po środowiskach + sekwencyjne uruchamianie i fail-fast
     environment: ${{ matrix.environment }}
     strategy:
