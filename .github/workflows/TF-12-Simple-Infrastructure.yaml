@@ -232,7 +232,7 @@ jobs:
       - name: Create backend ${{ matrix.environment }}
         shell: bash
         run: |
-          cat <<-EOF > terraform.auto.tfvars
+          cat <<-EOF > backend.tf
           terraform { 
             cloud { 
               
@@ -310,7 +310,7 @@ jobs:
       - name: Create backend ${{ matrix.environment }}
         shell: bash
         run: |
-          cat <<-EOF > terraform.auto.tfvars
+          cat <<-EOF > backend.tf
           terraform { 
             cloud { 
               
