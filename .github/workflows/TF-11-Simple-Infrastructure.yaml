@@ -287,8 +287,8 @@ jobs:
 
       - name: Need to wait for droplet to be fully ready before running Ansible
         run: |
-          echo "Czekam 30 sekund na pełną gotowość dropleta..."
-          sleep 30
+          echo "Czekam 20 sekund na pełną gotowość dropleta..."
+          sleep 20
 
       - name: Run Ansible playbook - install nginx
         run: ansible-playbook -i inventories/hosts.yaml install-nginx.yaml --limit piotr-koska-github-actions-droplet
