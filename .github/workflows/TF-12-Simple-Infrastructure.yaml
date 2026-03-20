@@ -644,7 +644,7 @@ jobs:
     defaults:
       run:
         working-directory: TERRAFORM/04
-    needs: build-and-push-app
+    needs: build-and-push-app-prod
     if: ${{ inputs.destroy != 'true' }}
     runs-on: ubuntu-latest
     steps:
