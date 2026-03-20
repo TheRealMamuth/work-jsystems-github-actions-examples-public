@@ -747,6 +747,9 @@ jobs:
           echo "Czekam 20 sekund na pełną gotowość dropleta..."
           sleep 20
 
+      - name: Show Ansible inventory (for debug)
+        run: cat inventories/${{ matrix.srodowisko }}/hosts.yaml
+
       - name: Run Ansible playbook - install nginx
         run: ansible-playbook -i inventories/${{ matrix.srodowisko }}/hosts.yaml install-nginx.yaml --limit ${{ vars.DROPLET_NAME }}
 
