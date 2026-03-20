@@ -27,23 +27,19 @@
         state: present
 
     # -------------------------
-    # DOCKER REPO (POPRAWNIE)
+    # DOCKER (POPRAWNIE 2026)
     # -------------------------
 
-    - name: Utwórz katalog na keyring
+    - name: Utwórz katalog keyrings
       file:
         path: /etc/apt/keyrings
         state: directory
         mode: '0755'
 
-    - name: Pobierz klucz Dockera (ASCII)
-      get_url:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /tmp/docker.asc
-        mode: '0644'
-
-    - name: Konwertuj klucz do gpg (dearmor)
-      command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.asc
+    - name: Dodaj klucz Dockera (dearmor + poprawny fingerprint)
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+        gpg --dearmor -o /etc/apt/keyrings/docker.gpg
       args:
         creates: /etc/apt/keyrings/docker.gpg
 
@@ -52,13 +48,17 @@
         path: /etc/apt/keyrings/docker.gpg
         mode: '0644'
 
-    - name: Dodaj repozytorium Dockera
+    - name: Dodaj repozytorium Dockera (noble fix)
       apt_repository:
-        repo: "deb [arch={{ ansible_facts['architecture'] }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+        repo: >
+          deb [arch={{ ansible_facts['architecture'] }}
+          signed-by=/etc/apt/keyrings/docker.gpg]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_facts['distribution_release'] }} stable
         state: present
         filename: docker
 
-    - name: Update apt cache po dodaniu repo
+    - name: Update apt cache po repo
       apt:
         update_cache: yes
 
@@ -72,6 +72,8 @@
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
         state: present
 
     - name: Uruchom Docker
@@ -93,7 +95,7 @@
     # CONTAINER
     # -------------------------
 
-    - name: Usuń stary kontener (jeśli istnieje)
+    - name: Usuń stary kontener
       community.docker.docker_container:
         name: "{{ container_name }}"
         state: absent
