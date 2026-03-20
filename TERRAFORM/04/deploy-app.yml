@@ -8,9 +8,15 @@
     app_port: 8000
 
   tasks:
+
+    # -------------------------
+    # SYSTEM
+    # -------------------------
+
     - name: Update apt cache
       apt:
         update_cache: yes
+        cache_valid_time: 3600
 
     - name: Instaluj zależności
       apt:
@@ -20,19 +26,59 @@
           - gnupg
         state: present
 
-    - name: Dodaj repozytorium Dockera
-      shell: |
-        install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-        chmod a+r /etc/apt/keyrings/docker.gpg
-        echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-          $(. /etc/os-release && echo $VERSION_CODENAME) stable" \
-          > /etc/apt/sources.list.d/docker.list
+    # -------------------------
+    # CLEANUP (ważne!)
+    # -------------------------
+
+    - name: Usuń stary klucz Dockera jeśli istnieje
+      file:
+        path: /etc/apt/keyrings/docker.gpg
+        state: absent
+
+    - name: Usuń stare repo Dockera jeśli istnieje
+      file:
+        path: /etc/apt/sources.list.d/docker.list
+        state: absent
+
+    # -------------------------
+    # DOCKER REPO (FIX 2026)
+    # -------------------------
+
+    - name: Utwórz katalog keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Pobierz klucz Dockera
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /tmp/docker.gpg
+        mode: '0644'
+
+    - name: Konwertuj klucz do formatu binarnego (dearmor)
+      command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Ustaw prawa do klucza
+      file:
+        path: /etc/apt/keyrings/docker.gpg
+        mode: '0644'
+
+    - name: Dodaj repo Dockera
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch={{ ansible_facts['architecture'] }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
 
     - name: Update apt cache po dodaniu repo
       apt:
         update_cache: yes
+
+    # -------------------------
+    # DOCKER INSTALL
+    # -------------------------
 
     - name: Instaluj Docker
       apt:
@@ -40,6 +86,8 @@
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
         state: present
 
     - name: Uruchom Docker
@@ -48,10 +96,18 @@
         state: started
         enabled: true
 
+    # -------------------------
+    # DOCKER IMAGE
+    # -------------------------
+
     - name: Pull obrazu
       community.docker.docker_image:
         name: "{{ docker_image }}"
         source: pull
+
+    # -------------------------
+    # CONTAINER
+    # -------------------------
 
     - name: Usuń stary kontener
       community.docker.docker_container:
@@ -64,6 +120,7 @@
         image: "{{ docker_image }}"
         state: started
         restart_policy: always
+        recreate: true
         ports:
           - "8080:{{ app_port }}"
         env:
