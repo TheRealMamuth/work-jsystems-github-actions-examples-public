@@ -41,7 +41,7 @@ resource "digitalocean_ssh_key" "main" {
 resource "digitalocean_ssh_key" "own" {
   name       = "piotr-koska-github-actions-own-ssh-key"
   public_key = var.own_ssh_public_key
-  
+
 }
 
 resource "digitalocean_firewall" "main" {
@@ -61,8 +61,8 @@ resource "digitalocean_firewall" "main" {
   }
 
   inbound_rule {
-    protocol = "tcp"
-    port_range = "8080"
+    protocol         = "tcp"
+    port_range       = "8080"
     source_addresses = ["0.0.0.0/0"]
   }
 
@@ -100,7 +100,7 @@ resource "local_file" "ansible_host_vars" {
 }
 
 resource "local_file" "ssh_private_key" {
-  filename = "${path.module}/ssh_keys/id_ed25519"
+  filename        = "${path.module}/ssh_keys/id_ed25519"
   file_permission = "0600"
-  content = tls_private_key.main.private_key_openssh
+  content         = tls_private_key.main.private_key_openssh
 }
