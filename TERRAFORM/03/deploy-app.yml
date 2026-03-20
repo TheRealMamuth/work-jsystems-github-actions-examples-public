@@ -27,7 +27,7 @@
         state: present
 
     # -------------------------
-    # DOCKER REPO (IDEMPOTENTNIE)
+    # DOCKER REPO (POPRAWNIE)
     # -------------------------
 
     - name: Utwórz katalog na keyring
@@ -36,16 +36,25 @@
         state: directory
         mode: '0755'
 
-    - name: Dodaj klucz GPG Dockera
+    - name: Pobierz klucz Dockera (ASCII)
       get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /etc/apt/keyrings/docker.gpg
+        dest: /tmp/docker.asc
         mode: '0644'
-        force: yes
+
+    - name: Konwertuj klucz do gpg (dearmor)
+      command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.asc
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Ustaw prawa do klucza
+      file:
+        path: /etc/apt/keyrings/docker.gpg
+        mode: '0644'
 
     - name: Dodaj repozytorium Dockera
       apt_repository:
-        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: "deb [arch={{ ansible_facts['architecture'] }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
         state: present
         filename: docker
 
