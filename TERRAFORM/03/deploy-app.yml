@@ -16,32 +16,30 @@
     - name: Update apt cache
       apt:
         update_cache: yes
-        cache_valid_time: 3600
 
     - name: Instaluj zależności
       apt:
         name:
           - ca-certificates
           - curl
-          - gnupg
         state: present
 
     # -------------------------
-    # CLEANUP (ważne!)
+    # CLEANUP (ważne)
     # -------------------------
 
-    - name: Usuń stary klucz Dockera jeśli istnieje
-      file:
-        path: /etc/apt/keyrings/docker.gpg
-        state: absent
-
-    - name: Usuń stare repo Dockera jeśli istnieje
+    - name: Usuń stare repo Dockera
       file:
         path: /etc/apt/sources.list.d/docker.list
         state: absent
 
+    - name: Usuń stare sources
+      file:
+        path: /etc/apt/sources.list.d/docker.sources
+        state: absent
+
     # -------------------------
-    # DOCKER REPO (FIX 2026)
+    # DOCKER (OFICJALNIE 2026)
     # -------------------------
 
     - name: Utwórz katalog keyrings
@@ -50,29 +48,23 @@
         state: directory
         mode: '0755'
 
-    - name: Pobierz klucz Dockera
+    - name: Pobierz klucz Dockera (ASC - zgodnie z docs)
       get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /tmp/docker.gpg
+        dest: /etc/apt/keyrings/docker.asc
         mode: '0644'
 
-    - name: Konwertuj klucz do formatu binarnego (dearmor)
-      command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg
-      args:
-        creates: /etc/apt/keyrings/docker.gpg
-
-    - name: Ustaw prawa do klucza
-      file:
-        path: /etc/apt/keyrings/docker.gpg
-        mode: '0644'
-
-    - name: Dodaj repo Dockera
+    - name: Dodaj repo Dockera (DEB822 - docker.sources)
       copy:
-        dest: /etc/apt/sources.list.d/docker.list
+        dest: /etc/apt/sources.list.d/docker.sources
         content: |
-          deb [arch={{ ansible_facts['architecture'] }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
+          Types: deb
+          URIs: https://download.docker.com/linux/ubuntu
+          Suites: {{ ansible_facts['distribution_release'] }}
+          Components: stable
+          Signed-By: /etc/apt/keyrings/docker.asc
 
-    - name: Update apt cache po dodaniu repo
+    - name: Update apt cache po repo
       apt:
         update_cache: yes
 
