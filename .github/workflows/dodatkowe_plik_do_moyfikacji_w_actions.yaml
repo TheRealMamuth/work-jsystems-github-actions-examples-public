@@ -1,0 +1,80 @@
+name: "DODATKOWE - Modyfikacja pliku przez GitHub Actions"
+
+# Workflow reaguje tylko na Pull Requesty kierowane do main.
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - main
+    paths-ignore:
+      - "DODATKOWE/Modyfikacja_pliku_github_actions/Plik_do_modyfikacji.txt"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-file-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  update-file:
+    name: Modyfikacja pliku i automatyczny commit
+    runs-on: ubuntu-latest
+
+    # Zapis tylko dla PR z tego samego repozytorium (bez forkow).
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    env:
+      FILE_PATH: DODATKOWE/Modyfikacja_pliku_github_actions/Plik_do_modyfikacji.txt
+
+    steps:
+      - name: Checkout galezi Pull Request
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+
+      - name: Modyfikacja pliku
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$(dirname "$FILE_PATH")"
+          touch "$FILE_PATH"
+
+          # Usun poprzednie identyfikatory.
+          sed -i '/^BUILD_NUMBER=/d; /^PR_NUMBER=/d; /^SOURCE_SHA=/d' "$FILE_PATH"
+
+          # Zapisz aktualne wartosci.
+          {
+            echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}"
+            echo "PR_NUMBER=${PR_NUMBER}"
+            echo "SOURCE_SHA=${SOURCE_SHA}"
+          } >> "$FILE_PATH"
+
+          echo "Zawartosc pliku:"
+          cat "$FILE_PATH"
+
+      - name: Commit i push zmian
+        env:
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -- "$FILE_PATH"
+
+          if git diff --cached --quiet; then
+            echo "Brak zmian do zapisania."
+            exit 0
+          fi
+
+          git commit -m "ci: update build ${GITHUB_RUN_NUMBER}"
+          git push origin "HEAD:${PR_BRANCH}"
