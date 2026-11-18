@@ -1,0 +1,55 @@
+name: 'Terraform Format'
+on:
+  workflow_call:
+    inputs:
+      terraform_version:
+        required: false
+        default: '1.7.5' # Update the default version (-1) version from the latest.
+        type: string
+      working_directory:
+        required: false
+        default: '.'     # Update the default directory to the root directory. 
+        type: string
+
+jobs:
+  tf-fmt:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      # This step will check if all terraform files are formatted correctly. If not, the action will fail.
+      # IMPORTANT: Use working-directory directives before the run command to specify the directory where the action will run.
+      - name: Terraform fmt
+        id: fmt
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          # information about the terraform version
+          terraform -version
+
+          # only check if all terraform file are formatted correctly - if not, the action will fail.
+          terraform fmt -check -recursive
+
+      # check the exit code of the terraform fmt command
+      - name: Terraform fmt failed
+        if: failure()
+        run: |
+          echo "::group::Terraform fmt check failed!"
+          echo "::error:: ⚠️ Some files are not formatted correctly. Please run 'terraform fmt' locally to format the files."
+          echo "::error:: 🚩 After that, commit the changes and push them to the repository. Thx!"
+          echo "::endgroup::"
+          exit 1
+  
+      - name: Terraform fmt passed
+        if: success()
+        run: |
+          echo "::group::Terraform fmt check passed!"
+          echo "✅ All files are formatted correctly."
+          echo "::endgroup::"
+          exit 0
+        

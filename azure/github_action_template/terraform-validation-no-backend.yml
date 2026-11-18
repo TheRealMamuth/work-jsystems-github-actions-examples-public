@@ -1,0 +1,38 @@
+name: 'Terraform Validation'
+on:
+  workflow_call:
+    inputs:
+      terraform_version:
+        required: false
+        default: '1.7.5' # Update the default version (-1) version from the latest.
+        type: string
+      working_directory:
+        required: false
+        default: '.'
+        type: string
+
+jobs:
+  terraform-validate:
+    name: 'Terraform Validate'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+      - name: Terraform init
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          terraform -version
+          terraform init -backend=false
+        shell: bash
+        
+      - name: Terraform validate
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          terraform validate -json
+        shell: bash
+        

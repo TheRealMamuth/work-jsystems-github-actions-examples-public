@@ -1,0 +1,65 @@
+# This is maintained by the ITCO Team
+name: 'Build'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  validate:
+    name: 'Validate'
+    uses: <github_repo>/.github/workflows/terraform-validation.yml@master
+    with:
+      terraform_version: ${{ vars.TERRAFORM_VERSION }}
+      working_directory: ${{ vars.WORKING_DIRECTORY }}
+    secrets:
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      client_secret_tf_vars: ${{ secrets.CLIENT_SECRET_TF_VARS }}
+      azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
+      backend_config_hcl: ${{ secrets.BACKEND_CONFIG_HCL }}
+
+  fmt:
+    name: 'Format'
+    uses: <github_repo>/itco-pipeline-workflow/.github/workflows/terraform-fmt.yml@master
+    with:
+      terraform_version: ${{ vars.TERRAFORM_VERSION }}
+      working_directory: ${{ vars.WORKING_DIRECTORY }}
+
+  # This is job contains the steps to plan the terraform code
+  plan:
+    name: 'Plan'
+    needs: validate
+    uses: <github_repo>/itco-pipeline-workflow/.github/workflows/terraform-plan.yml@master
+    with:
+      terraform_version: ${{ vars.TERRAFORM_VERSION }}
+      working_directory: ${{ vars.WORKING_DIRECTORY }}
+    secrets:
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      client_secret_tf_vars: ${{ secrets.CLIENT_SECRET_TF_VARS }}
+      azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
+      backend_config_hcl: ${{ secrets.BACKEND_CONFIG_HCL }}
+
+  # tested and coment out for now
+  apply:
+    name: 'Apply'
+    needs: [plan, fmt]
+    uses: <github_repo>/itco-pipeline-workflow/.github/workflows/terraform-plan-apply.yml@master
+    with:
+      terraform_version: ${{ vars.TERRAFORM_VERSION }}
+      working_directory: ${{ vars.WORKING_DIRECTORY }}
+    secrets:
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      client_secret_tf_vars: ${{ secrets.CLIENT_SECRET_TF_VARS }}
+      azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
+      backend_config_hcl: ${{ secrets.BACKEND_CONFIG_HCL }}

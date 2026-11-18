@@ -1,0 +1,149 @@
+name: 'Terraform Apply'
+on:
+  workflow_call:
+    inputs:
+      terraform_version:
+        required: false
+        default: '1.7.5' # Update the default version (-1) version from the latest.
+        type: string
+      working_directory:
+        required: false
+        default: '.'
+        type: string
+      tfvars_file:
+        required: false
+        default: ''
+        type: string
+    secrets:
+      # We can use azure_clinet_id, azure_tenant_id, azure_subscription_id, or azure_credentials
+      azure_client_id:
+        required: true
+      azure_tenant_id:
+        required: true
+      azure_subscription_id:
+        required: true
+      client_secret_tf_vars:
+        required: false
+      azure_credentials:
+        required: false
+      backend_config_hcl:
+        required: false
+
+#Special permissions required for OIDC authentication
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+#These environment variables are used by the terraform azure provider to setup OIDD authenticate. 
+env:
+  ARM_CLIENT_ID: ${{ secrets.azure_client_id }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.azure_subscription_id }}
+  ARM_TENANT_ID: ${{ secrets.azure_tenant_id }}
+
+jobs:
+  terraform-plan-apply:
+    name: 'Terraform Plan and Apply'
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exit_code }}
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        id: federation_login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.azure_client_id }}
+          tenant-id: ${{ secrets.azure_tenant_id }}
+          subscription-id: ${{ secrets.azure_subscription_id }}
+        continue-on-error: true
+
+      - name: Check if individual login succeeded
+        if: steps.federation_login.outcome == 'success'
+        run: echo "Login Federation Successful"
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        id: secret_login
+        if: steps.federation_login.outcome != 'success'
+        with:
+          creds: ${{ secrets.azure_credentials }}
+      
+      - name: Check if credentials login succeeded
+        if: steps.secret_login.outcome == 'success'
+        run: echo "Login with credentials secrets succeeded"
+
+      - name: Final Check
+        if: steps.secret_login.outcome != 'success' && steps.federation_login.outcome != 'success'
+        run: echo "Both login attempts failed" && exit 1
+
+      # Setup Terraform
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Configure hcl backend-config file
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          cat << EOF > ./backend-config.hcl
+          ${{ secrets.BACKEND_CONFIG_HCL }}
+          EOF
+      
+      # Terraform init
+      - name: Terraform init
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          plik="./backend-config.hcl"
+          if [ -f "$plik" ] && [ -s "$plik" ]; then
+            echo "With federation login"
+            terraform -version
+            terraform init -backend-config="$plik"
+          else
+            exit 1
+          fi
+        shell: bash
+
+      - name: Configure vars files
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          cat << EOF > ./ttf-secrets.auto.tfvars
+          ${{ secrets.client_secret_tf_vars }}
+          EOF
+          cat << EOF > ./ttf-vars.auto.tfvars
+          ${{ inputs.tfvars_file }}
+          EOF
+        
+      # Terraform plan
+      - name: Terraform plan
+        env:
+          CLIENT_SECRET_TF_VARS: ${{ secrets.client_secret_tf_vars }}
+        id: tf-plan
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          export exitcode=0
+          terraform plan -detailed-exitcode -var="client_secret=${{ secrets.client_secret_tf_vars }}" -out=tfplan || exitcode=$?
+          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+          if [ $exitcode -eq 1 ]; then
+            echo "Plan failed with exit code $exitcode. Please check the plan output for more information."
+            exit 1
+          else 
+            exit 0
+          fi
+        shell: bash
+
+      - name: Download tfplan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: "${{ inputs.working_directory }}/downloaded-tfplan"
+
+      - name: Terraform apply
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          terraform apply ./downloaded-tfplan/tfplan
+        shell: bash

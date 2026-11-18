@@ -1,0 +1,127 @@
+name: 'Terraform Create Backend'
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: false
+        default: '.'        # This is a path to the terraform configuration files.
+        type: string
+      backend_resource_group_name:
+        required: true
+        type: string        # This is the name of the resource group where the storage account will be created. Mandatory.
+      backend_storage_account_name:
+        required: true
+        type: string        # This is the name of the storage account. Mandatory.
+      backend_container_name:
+        required: false
+        default: 'tfstate'  # This is the name of the container where the terraform state file will be stored. Optional.
+        type: string
+      create_backend:
+        required: true
+        default: 'false'    # This is a flag to determine if the backend should be created. Mandatory.
+        type: string
+    secrets:
+      # We can use azure_clinet_id, azure_tenant_id, azure_subscription_id, or azure_credentials.outputs:
+      # You can pass own secrets to the workflow using the secrets in github action secret context.
+      azure_client_id:
+        required: true
+      azure_tenant_id:
+        required: true
+      azure_subscription_id:
+        required: true
+      client_secret_tf_vars:
+        required: true
+      azure_credentials:
+        required: true
+
+# Special permissions required for OIDC authentication.
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+# These environment variables are used by the terraform azure provider to setup OIDD authenticate. 
+env:
+  ARM_CLIENT_ID: ${{ secrets.azure_client_id }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.azure_subscription_id }}
+  ARM_TENANT_ID: ${{ secrets.azure_tenant_id }}
+
+jobs:
+  # This job will create the backend storage account and container for terraform state file.
+  terraform-plan-apply:
+    name: 'Create Terraform Backend'
+    if: inputs.create_backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Log in to Azure.    
+      - name: Log in to Azure
+        id: federation_login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.azure_client_id }}
+          tenant-id: ${{ secrets.azure_tenant_id }}
+          subscription-id: ${{ secrets.azure_subscription_id }}
+      
+      # Configure remote state storage account.
+      - name: Configure remote state storage account
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          #!/bin/bash
+          set +e
+
+          RESOURCE_GROUP_NAME=${{ inputs.backend_resource_group_name }}
+          STORAGE_ACCOUNT_NAME=${{ inputs.backend_storage_account_name }}
+          CONTAINER_NAME=${{ inputs.backend_container_name }}
+
+          # Check if resource group exists
+          echo "Checking if resource group $RESOURCE_GROUP_NAME exists..."
+          az group show --name $RESOURCE_GROUP_NAME 
+          if [ $? -ne 0 ]; then
+              echo "Resource group $RESOURCE_GROUP_NAME does not exist. Creating..."
+              az group create --name $RESOURCE_GROUP_NAME --location eastus
+              if [ $? -ne 0 ]; then
+                  set -e
+                  echo "Resource group $RESOURCE_GROUP_NAME could not be created. Exiting..."
+                  exit 2
+              fi
+          else
+              echo "Resource group $RESOURCE_GROUP_NAME already exists."
+          fi
+
+          # Check if storage account exists
+          echo "Checking if storage account $STORAGE_ACCOUNT_NAME exists..."
+          az storage account show --name $STORAGE_ACCOUNT_NAME --resource-group $RESOURCE_GROUP_NAME
+          if [ $? -ne 0 ]; then
+              echo "Storage account $STORAGE_ACCOUNT_NAME does not exist. Creating..."
+              az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
+              if [ $? -ne 0 ]; then
+                  set -e
+                  echo "Storage account name $STORAGE_ACCOUNT_NAME could not be created. Exiting..."
+                  exit 2
+              fi
+          else
+              echo "Storage account $STORAGE_ACCOUNT_NAME already exists."
+          fi
+
+          # Check if container exists
+          echo "Checking if container $CONTAINER_NAME exists..."
+          container_exists=$(az storage container exists --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --query exists)
+          if [ "$container_exists" == "false" ]; then
+              echo "Container $CONTAINER_NAME does not exist. Creating..."
+              az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --public-access off
+              if [ $? -ne 0 ]; then
+                  echo "Container $CONTAINER_NAME could not be created. Exiting..."
+                  exit 2
+              fi
+          else
+              set -e
+              echo "Container $CONTAINER_NAME already exists."
+              exit 1
+          fi
+
+        shell: bash
